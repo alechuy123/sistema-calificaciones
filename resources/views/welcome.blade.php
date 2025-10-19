@@ -49,11 +49,11 @@
             {{-- MÓDULOS DE REGISTRO CLAVE --}}
             <li><a href="{{ route('alumnos.index') }}">👤 Registro de Alumnos</a></li>
 
-            {{-- MÓDULOS DE ESTRUCTURA Y CALIFICACIÓN --}}
-            <li><a href="{{ route('grupos.index') }}">👥 Gestión de Grupos / Matriculación</a></li>
+            <hr style="width: 100%; border: none; margin: 15px 0;">
 
-            {{-- Una vez que este listo el CRUD de Calificaciones, agregaremos el enlace --}}
-            {{-- <li><a href="#">💯 Registro de Calificaciones</a></li> --}}
+            {{-- MÓDULOS DE ESTRUCTURA Y CALIFICACIÓN --}}
+            {{-- FUSIONADO: Este enlace ahora lleva a la página que tiene ambas funciones --}}
+            <li><a href="{{ route('grupos.index') }}">👥 Grupos (Matricular y Calificar)</a></li>
         </ul>
 
         <p style="margin-top: 40px; text-align: center; font-size: 0.9em; color: #999;">
