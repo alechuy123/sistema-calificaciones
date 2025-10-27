@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -31,6 +32,32 @@
         .subtitle { text-align: center; color: #555; margin-bottom: 30px; font-size: 1.2em; }
     </style>
 </head>
+@extends('layouts.app')
+
+@section('title', 'Inicio')
+
+@section('content')
+<div class="min-h-screen bg-gray-100">
+    <nav class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <h1>dashboard</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span>{{ Auth::user()->name }}</span>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit">
+                            Cerrar sesión
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+</div>
+
 <body>
     <div class="container">
         <h1>Sistema de Gestión de Calificaciones</h1>
@@ -49,11 +76,11 @@
             {{-- MÓDULOS DE REGISTRO CLAVE --}}
             <li><a href="{{ route('alumnos.index') }}">👤 Registro de Alumnos</a></li>
 
-            {{-- MÓDULOS DE ESTRUCTURA Y CALIFICACIÓN --}}
-            <li><a href="{{ route('grupos.index') }}">👥 Gestión de Grupos / Matriculación</a></li>
+            <hr style="width: 100%; border: none; margin: 15px 0;">
 
-            {{-- Una vez que este listo el CRUD de Calificaciones, agregaremos el enlace --}}
-            {{-- <li><a href="#">💯 Registro de Calificaciones</a></li> --}}
+            {{-- MÓDULOS DE ESTRUCTURA Y CALIFICACIÓN --}}
+            {{-- FUSIONADO: Este enlace ahora lleva a la página que tiene ambas funciones --}}
+            <li><a href="{{ route('grupos.index') }}">👥 Grupos (Matricular y Calificar)</a></li>
         </ul>
 
         <p style="margin-top: 40px; text-align: center; font-size: 0.9em; color: #999;">

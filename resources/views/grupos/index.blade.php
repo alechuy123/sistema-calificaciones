@@ -33,7 +33,7 @@
                     <td>{{ $grupo->materia->nombre }}</td>
                     <td>{{ $grupo->cuatrimestre->nombre }}</td>
 
-                    {{-- Muestra el estado --}}
+                    {{-- Muestra el estado (del proyecto final) --}}
                     <td>
                         @if ($grupo->esta_activo)
                             <span style="color: green;">✅ Activo</span>
@@ -42,21 +42,32 @@
                         @endif
                     </td>
 
+                    {{-- ACCIONES FUSIONADAS --}}
                     <td>
+                        {{-- ========================================================== --}}
+                        {{-- === CÓDIGO AÑADIDO (del proyecto antiguo) === --}}
+                        {{-- ========================================================== --}}
+                        <a href="{{ route('calificaciones.create', ['grupo' => $grupo->id, 'materia' => $grupo->materia->id]) }}">
+                            <strong>Calificar</strong>
+                        </a> |
+                        {{-- ========================================================== --}}
+
+
                         <a href="{{ route('grupos.show', $grupo->id) }}">Matricular</a>
                         |
                         <a href="{{ route('grupos.edit', $grupo->id) }}">Editar</a>
                         |
 
+                        {{-- Lógica de Activar/Desactivar (del proyecto final) --}}
                         @if ($grupo->esta_activo)
-                            {{-- Opción para DESACTIVAR (usa el método DELETE/destroy) --}}
+                            {{-- Opción para DESACTIVAR --}}
                             <form action="{{ route('grupos.destroy', $grupo->id) }}" method="POST" style="display:inline;">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" onclick="return confirm('¿Quieres DESACTIVAR este grupo?')" style="background:none; border:none; color:red; cursor:pointer;">Desactivar</button>
                             </form>
                         @else
-                            {{-- Opción para REACTIVAR (usa el método PUT/update) --}}
+                            {{-- Opción para REACTIVAR --}}
                             <form action="{{ route('grupos.update', $grupo->id) }}" method="POST" style="display:inline;">
                                 @csrf
                                 @method('PUT')

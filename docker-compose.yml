@@ -23,6 +23,7 @@ services:
             - sail
         depends_on:
             - mysql
+
     mysql:
         image: 'mysql/mysql-server:8.0'
         ports:
@@ -49,15 +50,21 @@ services:
             retries: 3
             timeout: 5s
 
-    # --- NUEVO SERVICIO AÑADIDO ---
-    adminer:
-        image: adminer
+    # INICIO: Servicio de phpMyAdmin
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin
         ports:
-            - '8080:8080'
+            - 8081:80 # Expone phpMyAdmin en el puerto 8081 de tu máquina
+        environment:
+            PMA_HOST: mysql # Importante: Debe coincidir con el nombre del servicio de MySQL
+            PMA_PORT: 3306
+            MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
+        depends_on:
+            - mysql
         networks:
             - sail
+    # FIN: Servicio de phpMyAdmin
 
-# --- ESTOS SON LOS BLOQUES QUE FALTABAN ---
 networks:
     sail:
         driver: bridge
