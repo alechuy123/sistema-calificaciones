@@ -9,16 +9,40 @@ class Materia extends Model
 {
     use HasFactory;
 
-    // CORRECCIÓN: 'esta_activo' DEBE estar en $fillable para ser actualizado
-    protected $fillable = ['nombre', 'esta_activo'];
+    /**
+     * Los atributos que se pueden asignar masivamente.
+     *
+     * Se combinan los campos de ambos proyectos:
+     * 'nombre' (común)
+     * 'objetivo' (de tu primer código)
+     * 'esta_activo' (del segundo código)
+     */
+    protected $fillable = [
+        'nombre',
+        'objetivo',
+        'esta_activo'
+    ];
 
-    // CLAVE: Asegura que el valor de la base de datos sea tratado como booleano (true/false)
+    /**
+     * Asegura que 'esta_activo' sea tratado como booleano (true/false).
+     * (Del segundo código)
+     */
     protected $casts = [
         'esta_activo' => 'boolean',
     ];
 
+    // --- RELACIONES COMBINADAS ---
+
     /**
-     * Una Materia pertenece a muchas Carreras.
+     * RELACIÓN V1: Una Materia tiene muchas Unidades.
+     */
+    public function unidades()
+    {
+        return $this->hasMany(Unidad::class);
+    }
+
+    /**
+     * RELACIÓN V2: Una Materia pertenece a muchas Carreras.
      */
     public function carreras()
     {
@@ -26,7 +50,7 @@ class Materia extends Model
     }
 
     /**
-     * Una Materia puede tener varios Grupos.
+     * RELACIÓN V2: Una Materia puede tener varios Grupos.
      */
     public function grupos()
     {

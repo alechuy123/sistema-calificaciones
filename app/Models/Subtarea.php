@@ -2,31 +2,21 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Subtarea extends Model
 {
     use HasFactory;
     
-    protected $table = 'subtareas';
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
+    // Añadido para que coincida con la migración
     protected $fillable = [
         'nombre',
-        // 'valor_porcentual', // <-- SE HA ELIMINADO ESTA LÍNEA
-        'criterio_evaluacion_id',
+        'instrumento_id',
     ];
 
-    /**
-     * Una subtarea pertenece a un criterio de evaluación.
-     */
-    public function criterioEvaluacion()
+    public function instrumento()
     {
-        return $this->belongsTo(CriterioEvaluacion::class, 'criterio_evaluacion_id');
+        return $this->belongsTo(Instrumento::class);
     }
 }

@@ -12,6 +12,8 @@ use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\CriterioController;
 use App\Http\Controllers\CalificacionController;
 use App\Http\Controllers\AuthController;
+// Import de Dafne añadido:
+use App\Http\Controllers\ConfiguracionEvaluacionController;
 // --- Fin Imports ---
 
 
@@ -39,7 +41,7 @@ Route::middleware('guest')->group(function () {
 // --- Rutas Protegidas (¡Aquí combinamos todo!) ---
 Route::middleware('auth')->group(function () {
 
-    // Ruta de dashboard (de Heri)
+    // Ruta de dashboard (de Heri/Alejandro)
     Route::get('/dashboard', function () {
         return view('welcome');
     })->name('dashboard');
@@ -65,5 +67,10 @@ Route::middleware('auth')->group(function () {
     // Rutas para Calificaciones (de Alejandro)
     Route::get('/calificar/{grupo}/{materia}', [CalificacionController::class, 'create'])->name('calificaciones.create');
     Route::post('/calificar', [CalificacionController::class, 'store'])->name('calificaciones.store');
+
+    // --- NUEVAS RUTAS DE DAFNE (Añadidas y protegidas) ---
+    Route::get('/materias/{materia}/configurar-evaluacion', [ConfiguracionEvaluacionController::class, 'show'])->name('evaluacion.show');
+    Route::post('/materias/{materia}/configurar-evaluacion', [ConfiguracionEvaluacionController::class, 'store'])->name('evaluacion.store');
+    Route::get('/materias/{materia}/info', [MateriaController::class, 'showInfoPublica'])->name('materia.publica.info');
 
 });

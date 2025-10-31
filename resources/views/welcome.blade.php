@@ -84,7 +84,7 @@
         </ul>
 
         <p style="margin-top: 40px; text-align: center; font-size: 0.9em; color: #999;">
-            *Recuerda que para que el sistema funcione, debes registrar los módulos base (Carreras, Ciclos, Cuatrimestres) primero.
+            *Recuerden que para que el sistema funcione, deben registrar los módulos base (Carreras, Ciclos, Cuatrimestres) primero.
         </p>
     </div>
 </body>
