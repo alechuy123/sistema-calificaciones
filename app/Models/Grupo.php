@@ -9,24 +9,39 @@ class Grupo extends Model
 {
     use HasFactory;
 
-    // CORRECCIÓN: Añadimos 'esta_activo'
-    protected $fillable = ['nombre', 'materia_id', 'cuatrimestre_id', 'carrera_id', 'esta_activo'];
+    // --- CAMBIO 1 ---
+    // Se elimina 'materia_id' (ya no existe en la tabla)
+    // Se añade 'grupo_anterior_id' (para el historial que pidió la maestra)
+    protected $fillable = [
+        'nombre',
+        // 'materia_id', // <- ELIMINADO
+        'cuatrimestre_id',
+        'carrera_id',
+        'esta_activo',
+        'grupo_anterior_id' // <- AÑADIDO (para el historial)
+    ];
 
-    // CLAVE: Asegura que el valor de la base de datos sea tratado como booleano
+    /**
+     * CLAVE: Asegura que el valor de la base de datos sea tratado como booleano
+     * (Esto se queda igual)
+     */
     protected $casts = [
         'esta_activo' => 'boolean',
     ];
 
     /**
-     * Un grupo pertenece a una materia.
+     * --- CAMBIO 2 ---
+     * Un grupo ahora tiene MUCHAS materias (a través de la tabla pivote 'grupo_materia').
+     * La función 'materia()' (singular) ha sido eliminada.
      */
-    public function materia()
+    public function materias()
     {
-        return $this->belongsTo(Materia::class, 'materia_id');
+        return $this->belongsToMany(Materia::class, 'grupo_materia');
     }
 
     /**
      * Un grupo se imparte en un cuatrimestre específico.
+     * (Esto se queda igual)
      */
     public function cuatrimestre()
     {
@@ -35,6 +50,7 @@ class Grupo extends Model
 
     /**
      * Un grupo pertenece a una Carrera.
+     * (Esto se queda igual)
      */
     public function carrera()
     {
@@ -43,9 +59,33 @@ class Grupo extends Model
 
     /**
      * Un grupo tiene muchos alumnos (a través de la tabla pivote 'alumno_grupo').
+     * (Esto se queda igual)
      */
     public function alumnos()
     {
         return $this->belongsToMany(Alumno::class, 'alumno_grupo', 'grupo_id', 'alumno_id');
+    }
+
+    /**
+     * --- CAMBIO 3 (NUEVO) ---
+     * Relaciones para el historial (promover grupo)
+     */
+
+    /**
+     * Obtiene el grupo que fue el cuatrimestre pasado (el "padre" de este grupo).
+     */
+    public function grupoAnterior()
+    {
+        // Un grupo pertenece a su versión anterior
+        return $this->belongsTo(Grupo::class, 'grupo_anterior_id');
+    }
+
+    /**
+     * Obtiene el grupo que será el próximo cuatrimestre (el "hijo" de este grupo).
+     */
+    public function grupoSiguiente()
+    {
+        // Un grupo tiene una (o ninguna) versión futura
+        return $this->hasOne(Grupo::class, 'grupo_anterior_id');
     }
 }

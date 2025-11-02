@@ -1,41 +1,70 @@
-<h1>Registrar Nuevo Ciclo Escolar</h1>
+@extends('layouts.app')
 
-@if ($errors->any())
-    <div style="color: red;">
-        <strong>¡Atención!</strong> Hubo problemas con tu registro.<br><br>
-        <ul>
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
+@section('title', 'Registrar Ciclo Escolar')
+
+@section('content')
+<div class="py-12">
+    <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Registrar Nuevo Ciclo Escolar</h1>
+            <a href="{{ route('ciclos.index') }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg shadow-md hover:bg-gray-300 transition duration-300">
+                &larr; Volver al listado
+            </a>
+        </div>
+
+        <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+            <div class="p-6 sm:p-8">
+
+                @if ($errors->any())
+                    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-md shadow-sm" role="alert">
+                        <strong class="font-bold">¡Atención!</strong>
+                        <span class="block sm:inline">Hubo problemas con tu registro.</span>
+                        <ul class="mt-3 list-disc list-inside text-sm">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <form action="{{ route('ciclos.store') }}" method="POST" class="space-y-6">
+                    @csrf
+
+                    <div>
+                        <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre del Ciclo</label>
+                        <input type="text" name="nombre" id="nombre" placeholder="Ej: 2024-2025" value="{{ old('nombre') }}" required
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="fecha_inicio" class="block text-sm font-medium text-gray-700">Fecha de Inicio</label>
+                            <input type="date" name="fecha_inicio" id="fecha_inicio" value="{{ old('fecha_inicio') }}" required
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+
+                        <div>
+                            <label for="fecha_fin" class="block text-sm font-medium text-gray-700">Fecha de Fin</label>
+                            <input type="date" name="fecha_fin" id="fecha_fin" value="{{ old('fecha_fin') }}" required
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center">
+                        <input type="checkbox" name="esta_activo" id="esta_activo" value="1" {{ old('esta_activo') ? 'checked' : '' }}
+                               class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <label for="esta_activo" class="ml-2 block text-sm text-gray-900">Marcar como Activo</label>
+                    </div>
+
+                    <div class="flex justify-end pt-6">
+                        <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition duration-300">
+                            Guardar Ciclo
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-@endif
-
-<form action="{{ route('ciclos.store') }}" method="POST">
-    @csrf
-
-    <div>
-        <strong>Nombre del Ciclo:</strong>
-        <input type="text" name="nombre" placeholder="Ej: 2024-2025" value="{{ old('nombre') }}" required>
-    </div>
-
-    <div>
-        <strong>Fecha de Inicio:</strong>
-        <input type="date" name="fecha_inicio" value="{{ old('fecha_inicio') }}" required>
-    </div>
-
-    <div>
-        <strong>Fecha de Fin:</strong>
-        <input type="date" name="fecha_fin" value="{{ old('fecha_fin') }}" required>
-    </div>
-
-    <div>
-        <strong>Activo:</strong>
-        {{-- Laravel interpreta el checkbox si está presente (on) o no (off/null) --}}
-        <input type="checkbox" name="esta_activo" value="1" {{ old('esta_activo') ? 'checked' : '' }}>
-    </div>
-
-    <button type="submit">Guardar Ciclo</button>
-</form>
-
-<a href="{{ route('ciclos.index') }}">Volver al listado</a>
+</div>
+@endsection

@@ -7,6 +7,7 @@ use App\Http\Controllers\AlumnoController;
 use App\Http\Controllers\MateriaController;
 use App\Http\Controllers\CuatrimestreController;
 use App\Http\Controllers\GrupoController;
+use App\Http\Controllers\DashboardController;
 
 // --- Imports Combinados ---
 use App\Http\Controllers\CriterioController;
@@ -23,6 +24,7 @@ Route::get('/', function () {
 
 
 // --- Rutas de Autenticación de Heri (para invitados) ---
+// --- CORRECCIÓN: Se quitó el punto extra de "Route.::" ---
 Route::middleware('guest')->group(function () {
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
@@ -42,9 +44,8 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
 
     // Ruta de dashboard (de Heri/Alejandro)
-    Route::get('/dashboard', function () {
-        return view('welcome');
-    })->name('dashboard');
+    // CÓDIGO NUEVO:
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Ruta de cierre de sesión (de Heri)
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -56,9 +57,19 @@ Route::middleware('auth')->group(function () {
     Route::resource('alumnos', AlumnoController::class);
     Route::resource('materias', MateriaController::class);
     Route::resource('cuatrimestres', CuatrimestreController::class);
+
+    // --- Rutas de Grupos (con las nuevas funcionalidades) ---
     Route::resource('grupos', GrupoController::class);
     Route::post('grupos/{grupo}/assign-students', [GrupoController::class, 'assignStudents'])
         ->name('grupos.assign_students');
+
+    // --- NUEVAS RUTAS AÑADIDAS (Para el plan de la maestra) ---
+
+    // Ruta para el formulario de "Promover"
+    Route::get('/grupos/{grupo}/promover', [GrupoController::class, 'showPromoverForm'])->name('grupos.promover.form');
+    // Ruta que procesa la promoción
+    Route::post('/grupos/{grupo}/promover', [GrupoController::class, 'promover'])->name('grupos.promover');
+
 
     // Rutas para Criterios (de Alejandro)
     Route::get('criterios/create/{materia?}', [CriterioController::class, 'create'])->name('criterios.create');
@@ -73,4 +84,19 @@ Route::middleware('auth')->group(function () {
     Route::post('/materias/{materia}/configurar-evaluacion', [ConfiguracionEvaluacionController::class, 'store'])->name('evaluacion.store');
     Route::get('/materias/{materia}/info', [MateriaController::class, 'showInfoPublica'])->name('materia.publica.info');
 
+
+    // ==========================================================
+    // --- RUTAS DE API PARA JAVASCRIPT ---
+    // ==========================================================
+
+    // API para JavaScript (Formulario de Grupos)
+    Route::get('/api/carreras/{carrera}/materias', [GrupoController::class, 'getMateriasPorCarrera'])
+         ->name('api.carreras.materias');
+
+    // --- ¡NUEVA RUTA AÑADIDA! ---
+    // API para JavaScript (Formulario de Alumnos)
+    Route::get('/api/carreras/{carrera}/grupos', [AlumnoController::class, 'getGruposPorCarrera'])
+         ->name('api.carreras.grupos');
+
 });
+

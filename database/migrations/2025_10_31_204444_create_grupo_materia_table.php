@@ -10,25 +10,20 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-{
-    Schema::create('subtareas', function (Blueprint $table) {
+    {
+       Schema::create('grupo_materia', function (Blueprint $table) {
         $table->id();
-
-        // Llave foránea que lo conecta a la tabla 'instrumentos'
-        $table->foreignId('instrumento_id')
-              ->constrained('instrumentos')
-              ->onDelete('cascade');
-
-        $table->string('nombre'); // Ej: "Portada", "Introducción", "Conclusión"
+        $table->foreignId('grupo_id')->constrained()->onDelete('cascade');
+        $table->foreignId('materia_id')->constrained()->onDelete('cascade');
         $table->timestamps();
-    });
-}
+        });
+    }
 
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::dropIfExists('subtareas');
+        Schema::dropIfExists('grupo_materia');
     }
 };
