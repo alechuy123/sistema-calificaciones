@@ -11,7 +11,6 @@ use Illuminate\Http\Request;
 
 class ConfiguracionEvaluacionController extends Controller
 {
-    // ... (Tu método 'show' se queda igual) ...
     public function show(Materia $materia)
     {
         $materia->load('unidades.instrumentos');
@@ -25,17 +24,13 @@ class ConfiguracionEvaluacionController extends Controller
         $request->validate([
             'unidades' => 'required|array',
             
-            // --- NUEVAS REGLAS PARA FECHAS ---
-            // 'unidades.*.fecha_inicio' valida la fecha_inicio dentro de cada unidad del array
             'unidades.*.fecha_inicio' => 'required|date',
             'unidades.*.fecha_fin' => 'required|date|after_or_equal:unidades.*.fecha_inicio',
             
-            // --- REGLAS EXISTENTES ---
             'unidades.*.instrumentos' => 'sometimes|required|array|min:1', // 'sometimes' por si solo guardan fechas
             'unidades.*.instrumentos.*.nombre' => 'required_with:unidades.*.instrumentos|string|max:255',
             'unidades.*.instrumentos.*.porcentaje' => 'required_with:unidades.*.instrumentos|integer|min:1|max:100',
         ], [
-            // Mensajes de error personalizados
             'unidades.*.fecha_fin.after_or_equal' => 'La fecha de fin debe ser igual o posterior a la fecha de inicio.'
         ]);
 
