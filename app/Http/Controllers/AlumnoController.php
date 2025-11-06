@@ -6,6 +6,7 @@ use App\Models\Alumno;
 use App\Models\Carrera;
 use App\Models\CicloEscolar;
 use Illuminate\Http\Request;
+use App\Models\Grupo; // Asegúrate de que este import exista
 
 class AlumnoController extends Controller
 {
@@ -14,7 +15,12 @@ class AlumnoController extends Controller
      */
     public function index()
     {
-        $alumnos = Alumno::with(['carrera', 'cicloEscolar'])->get();
+        // --- ¡CAMBIO AQUÍ! ---
+        // Le decimos a Eloquent que también traiga la relación 'grupos'
+        // Esto es para poder mostrar el grupo en el listado (index).
+        $alumnos = Alumno::with(['carrera', 'cicloEscolar', 'grupos'])->get();
+        // --- FIN DEL CAMBIO ---
+
         return view('alumnos.index', compact('alumnos'));
     }
 
@@ -23,8 +29,9 @@ class AlumnoController extends Controller
      */
     public function create()
     {
-        $carreras = Carrera::all();
-        // Solo mostramos ciclos activos para la matriculación
+        // Esto está correcto, solo pasamos carreras y ciclos.
+        // Los grupos se cargan con JS.
+        $carreras = Carrera::where('esta_activo', 1)->get();
         $ciclos = CicloEscolar::where('esta_activo', true)->get();
 
         return view('alumnos.create', compact('carreras', 'ciclos'));
@@ -35,6 +42,7 @@ class AlumnoController extends Controller
      */
     public function store(Request $request)
     {
+        // Esta lógica ya está correcta.
         $request->validate([
             'nombre' => 'required|string|max:255',
             'apellido_paterno' => 'required|string|max:255',
@@ -42,10 +50,14 @@ class AlumnoController extends Controller
             'matricula' => 'required|unique:alumnos|max:20',
             'carrera_id' => 'required|exists:carreras,id',
             'ciclo_escolar_id' => 'required|exists:ciclo_escolars,id',
+            'grupo_id' => 'nullable|exists:grupos,id',
         ]);
 
-        // Se crea con esta_activo = TRUE por defecto (según la migración)
-        Alumno::create($request->all());
+        $alumno = Alumno::create($request->except('grupo_id'));
+
+        if ($request->filled('grupo_id')) {
+            $alumno->grupos()->attach($request->grupo_id);
+        }
 
         return redirect()->route('alumnos.index')
                          ->with('success', 'Alumno registrado con éxito.');
@@ -58,22 +70,36 @@ class AlumnoController extends Controller
 
     /**
      * Muestra el formulario para editar un alumno específico.
+     * (Este método ya tiene la lógica del JS que hicimos)
      */
     public function edit(Alumno $alumno)
     {
-        // Se necesitan todas las carreras y ciclos para los menús desplegables
-        $carreras = Carrera::all();
-        $ciclos = CicloEscolar::all();
+        $carreras = Carrera::where('esta_activo', 1)->get();
+        $ciclos = CicloEscolar::where('esta_activo', 1)->get();
 
-        return view('alumnos.edit', compact('alumno', 'carreras', 'ciclos'));
+        // 1. Obtenemos los grupos de la carrera actual (para el JS)
+        $grupos_de_la_carrera = Grupo::where('carrera_id', $alumno->carrera_id)
+                                    ->where('esta_activo', 1)
+                                    ->get();
+
+        // 2. Obtenemos el ID del grupo actual
+        $grupo_actual_id = $alumno->grupos()->first()->id ?? null;
+
+        return view('alumnos.edit', compact(
+            'alumno',
+            'carreras',
+            'ciclos',
+            'grupos_de_la_carrera',
+            'grupo_actual_id'
+        ));
     }
 
     /**
-     * Actualiza el alumno en la base de datos (Usado para Edición y Reactivación).
+     * Actualiza el alumno en la base de datos.
+     * (Este método ya tiene la lógica de 'sync' que hicimos)
      */
     public function update(Request $request, Alumno $alumno)
     {
-        // Validación: Matricula debe ser única, excluyendo el alumno actual.
         $request->validate([
             'nombre' => 'required|string|max:255',
             'apellido_paterno' => 'required|string|max:255',
@@ -81,30 +107,50 @@ class AlumnoController extends Controller
             'matricula' => 'required|max:20|unique:alumnos,matricula,' . $alumno->id,
             'carrera_id' => 'required|exists:carreras,id',
             'ciclo_escolar_id' => 'required|exists:ciclo_escolars,id',
-            'esta_activo' => 'boolean', // Permite que el estado sea enviado
+            'esta_activo' => 'boolean',
+            'grupo_id' => 'nullable|exists:grupos,id',
         ]);
 
-        // 1. Preparar datos de actualización
-        $data = $request->except(['_token', '_method']);
-        // CLAVE: Obtenemos el valor booleano del estado del checkbox/hidden
+        $data = $request->except(['_token', '_method', 'grupo_id']);
         $data['esta_activo'] = $request->boolean('esta_activo');
 
-        // 2. Actualización
         $alumno->update($data);
+
+        // Sincroniza el grupo
+        if ($request->has('grupo_id')) {
+            $grupo_id = $request->input('grupo_id');
+            $alumno->grupos()->sync($grupo_id ? [$grupo_id] : []);
+        }
 
         return redirect()->route('alumnos.index')
                          ->with('success', 'Alumno actualizado con éxito.');
     }
 
     /**
-     * Desactiva (Elimina Suavemente) un alumno (usado por el botón 'Desactivar').
+     * Desactiva un alumno.
+     * (Este método ya tiene la lógica de 'sync' que hicimos)
      */
     public function destroy(Alumno $alumno)
     {
-        // Desactivamos el alumno cambiando 'esta_activo' a FALSE
+        $alumno->grupos()->sync([]); // Lo quita de cualquier grupo
         $alumno->update(['esta_activo' => false]);
 
         return redirect()->route('alumnos.index')
-                         ->with('success', 'Alumno desactivado con éxito.');
+                         ->with('success', 'Alumno desactivado y desvinculado de grupos con éxito.');
+    }
+
+
+    /**
+     * API para el JavaScript.
+     * (Este método ya está correcto)
+     */
+    public function getGruposPorCarrera(Carrera $carrera)
+    {
+        $grupos = $carrera->grupos()
+                         ->where('grupos.esta_activo', 1)
+                         ->get(['grupos.id', 'grupos.nombre']);
+
+        return response()->json($grupos);
     }
 }
+

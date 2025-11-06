@@ -34,4 +34,18 @@ class Carrera extends Model
         // Se asume que el ID de la carrera está en la tabla alumnos
         return $this->hasMany(Alumno::class, 'carrera_id');
     }
+
+    // ==========================================================
+    // --- ¡NUEVA RELACIÓN AÑADIDA PARA CORREGIR EL ERROR! ---
+    // ==========================================================
+
+    /**
+     * Una Carrera tiene muchos Grupos.
+     * Esta es la función que faltaba y causaba el error 500 en el AJAX.
+     */
+    public function grupos()
+    {
+        // Un Grupo pertenece a una Carrera (la llave foránea 'carrera_id' está en la tabla 'grupos')
+        return $this->hasMany(Grupo::class, 'carrera_id');
+    }
 }

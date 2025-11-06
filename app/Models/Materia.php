@@ -11,11 +11,7 @@ class Materia extends Model
 
     /**
      * Los atributos que se pueden asignar masivamente.
-     *
-     * Se combinan los campos de ambos proyectos:
-     * 'nombre' (común)
-     * 'objetivo' (de tu primer código)
-     * 'esta_activo' (del segundo código)
+     * (Esto se queda igual)
      */
     protected $fillable = [
         'nombre',
@@ -25,7 +21,7 @@ class Materia extends Model
 
     /**
      * Asegura que 'esta_activo' sea tratado como booleano (true/false).
-     * (Del segundo código)
+     * (Esto se queda igual)
      */
     protected $casts = [
         'esta_activo' => 'boolean',
@@ -35,6 +31,7 @@ class Materia extends Model
 
     /**
      * RELACIÓN V1: Una Materia tiene muchas Unidades.
+     * (Esto se queda igual)
      */
     public function unidades()
     {
@@ -43,6 +40,7 @@ class Materia extends Model
 
     /**
      * RELACIÓN V2: Una Materia pertenece a muchas Carreras.
+     * (Esto se queda igual)
      */
     public function carreras()
     {
@@ -50,10 +48,13 @@ class Materia extends Model
     }
 
     /**
-     * RELACIÓN V2: Una Materia puede tener varios Grupos.
+     * --- CAMBIO 1 ---
+     * RELACIÓN V2: Una Materia ahora puede estar en MUCHOS Grupos.
+     * Se cambia de 'hasMany' a 'belongsToMany'.
      */
     public function grupos()
     {
-        return $this->hasMany(Grupo::class, 'materia_id');
+        // return $this->hasMany(Grupo::class, 'materia_id'); // <- CÓDIGO ANTIGUO
+        return $this->belongsToMany(Grupo::class, 'grupo_materia'); // <- CÓDIGO NUEVO
     }
 }
