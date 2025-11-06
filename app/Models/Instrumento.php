@@ -20,9 +20,8 @@ class Instrumento extends Model
         return $this->belongsTo(Unidad::class);
     }
     
-    // Relación a Subtareas
-    public function subtareas()
+    public function tareasecundarias()
     {
-        return $this->hasMany(Subtarea::class);
+        return $this->hasMany(TareaSecundaria::class);
     }
 }
