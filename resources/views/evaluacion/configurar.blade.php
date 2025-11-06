@@ -30,27 +30,37 @@
                 
                 <div class="card-body">
                     
-                    <h5 style="margin-bottom: 2.5rem;">Periodo de la Unidad</h5>
-                    <div class="row g-3 p-3 bg-light border rounded mb-4">
-                        <div class="col-md-6">
-                            <label for="fecha_inicio_{{ $unidad->id }}" class="form-label">Fecha de Inicio:</label>
-                            <input type="date"
-                                   id="fecha_inicio_{{ $unidad->id }}"
-                                   name="unidades[{{ $unidad->id }}][fecha_inicio]"
-                                   class="form-control"
-                                   value="{{ old('unidades.'.$unidad->id.'.fecha_inicio', $unidad->fecha_inicio?->format('Y-m-d')) }}"
-                                   required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="fecha_fin_{{ $unidad->id }}" class="form-label">Fecha de Fin:</label>
-                            <input type="date"
-                                   id="fecha_fin_{{ $unidad->id }}"
-                                   name="unidades[{{ $unidad->id }}][fecha_fin]"
-                                   class="form-control"
-                                   value="{{ old('unidades.'.$unidad->id.'.fecha_fin', $unidad->fecha_fin?->format('Y-m-d')) }}"
-                                   required>
-                        </div>
+                <h5 style="margin-bottom: 2.5rem;">Periodo de la Unidad</h5>
+                <div class="row g-3 p-3 bg-light border rounded mb-4">
+
+                    <div class="col-12">
+                        <label for="objetivo_{{ $unidad->id }}" class="form-label">Objetivo de la Unidad:</label>
+                        <textarea id="objetivo_{{ $unidad->id }}"
+                                name="unidades[{{ $unidad->id }}][objetivo]"
+                                class="form-control"
+                                rows="2"
+                                placeholder="Escribe el objetivo de aprendizaje para esta unidad..."
+                        >{{ old('unidades.'.$unidad->id.'.objetivo', $unidad->objetivo) }}</textarea>
                     </div>
+                    <div class="col-md-6">
+                        <label for="fecha_inicio_{{ $unidad->id }}" class="form-label">Fecha de Inicio:</label>
+                        <input type="date"
+                            id="fecha_inicio_{{ $unidad->id }}"
+                            name="unidades[{{ $unidad->id }}][fecha_inicio]"
+                            class="form-control"
+                            value="{{ old('unidades.'.$unidad->id.'.fecha_inicio', $unidad->fecha_inicio?->format('Y-m-d')) }}"
+                            required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="fecha_fin_{{ $unidad->id }}" class="form-label">Fecha de Fin:</label>
+                        <input type="date"
+                            id="fecha_fin_{{ $unidad->id }}"
+                            name="unidades[{{ $unidad->id }}][fecha_fin]"
+                            class="form-control"
+                            value="{{ old('unidades.'.$unidad->id.'.fecha_fin', $unidad->fecha_fin?->format('Y-m-d')) }}"
+                            required>
+                    </div>
+                </div>
 
                     <h5 class="mt-3">Instrumentos de Evaluación</h5>
                     <div id="instrumentos-container-{{ $unidad->id }}">

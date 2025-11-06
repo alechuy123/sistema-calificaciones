@@ -34,6 +34,14 @@
             </div>
 
             <div class="card-body">
+                
+                <div class="mb-3" style="padding-left: 10px; border-left: 3px solid #0d6efd;">
+                    <strong class="d-block mb-1"><i class="fas fa-bullseye text-primary"></i> Objetivo de la Unidad:</strong>
+                    <p class="text-muted mb-0">
+                        {{ $unidad->objetivo ?? 'El objetivo de esta unidad no ha sido definido.' }}
+                    </p>
+                </div>
+                <hr>
                 @if ($unidad->instrumentos->isEmpty())
                     <div class="alert alert-warning mb-0">
                         <i class="fas fa-exclamation-triangle"></i> La estructura de evaluación de esta unidad aún no ha sido definida.

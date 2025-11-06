@@ -17,8 +17,9 @@ class Unidad extends Model
     protected $fillable = [
         'nombre',
         'materia_id',
-        'fecha_inicio', // <--- AÑADIR
-        'fecha_fin',    // <--- AÑADIR
+        'objetivo',
+        'fecha_inicio', 
+        'fecha_fin',    
     ];
 
     /**
