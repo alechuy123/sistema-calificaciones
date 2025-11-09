@@ -5,6 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+// --- ¡ESTAS LÍNEAS FALTABAN! ---
+use App\Models\Unidad;
+use App\Models\Carrera;
+use App\Models\Grupo;
+
 class Materia extends Model
 {
     use HasFactory;

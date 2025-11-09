@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
+    <!-- ========================================================== -->
+    <!-- --- ¡ESTA ES LA LÍNEA ARREGLADA QUE FALTABA! --- -->
+    <!-- ========================================================== -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <title>Sistema de Calificaciones - @yield('title', 'Inicio')</title>
 
     <!-- Estilos (Tailwind y Bootstrap) -->

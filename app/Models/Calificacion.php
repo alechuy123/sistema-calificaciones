@@ -8,47 +8,38 @@ use Illuminate\Database\Eloquent\Model;
 class Calificacion extends Model
 {
     use HasFactory;
-    
-    protected $table = 'calificacions';
 
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'calificaciones';
+
+    /**
+     * Los atributos que se pueden asignar masivamente.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
         'alumno_id',
-        'grupo_id',
-        'criterio_evaluacion_id',
-        'subtarea_id',
-        'puntuacion_decimal',
+        'instrumento_id',
+        'calificacion_obtenida',
     ];
 
-    
     /**
-     * Una Calificación pertenece a un Alumno.
+     * Obtiene el alumno al que pertenece la calificación.
      */
     public function alumno()
     {
-        return $this->belongsTo(Alumno::class, 'alumno_id');
+        return $this->belongsTo(Alumno::class);
     }
 
     /**
-     * Una Calificación pertenece a un Grupo.
+     * Obtiene el instrumento de evaluación al que pertenece la calificación.
      */
-    public function grupo()
+    public function instrumento()
     {
-        return $this->belongsTo(Grupo::class, 'grupo_id');
-    }
-
-    /**
-     * Una Calificación pertenece a un Criterio de Evaluación.
-     */
-    public function criterioEvaluacion()
-    {
-        return $this->belongsTo(CriterioEvaluacion::class, 'criterio_evaluacion_id');
-    }
-
-    /**
-     * Una Calificación PUEDE pertenecer a una Subtarea.
-     */
-    public function subtarea()
-    {
-        return $this->belongsTo(Subtarea::class, 'subtarea_id');
+        return $this->belongsTo(Instrumento::class);
     }
 }
