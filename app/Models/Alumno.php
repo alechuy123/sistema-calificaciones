@@ -4,14 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-// AGREGADO: Es importante importar los modelos que se usarán en los cálculos.
-use App\Models\CriterioEvaluacion; 
+use Illuminate\Database\Eloquent\Casts\Attribute;
+// --- ¡IMPORTACIONES AÑADIDAS! ---
+// Tu editor marcaba error porque faltaban estas líneas
+use App\Models\Carrera;
+use App\Models\CicloEscolar;
+use App\Models\Grupo;
+use App\Models\Calificacion;
+use App\Models\CriterioEvaluacion;
+// --- FIN DE IMPORTACIONES ---
 
 class Alumno extends Model
 {
     use HasFactory;
 
-    // FUSIONADO: Contiene los campos de ambos proyectos.
     protected $fillable = [
         'nombre',
         'apellido_paterno',
@@ -19,10 +25,9 @@ class Alumno extends Model
         'matricula',
         'carrera_id',
         'ciclo_escolar_id',
-        'esta_activo' // NUEVO: Para la desactivación lógica
+        'esta_activo'
     ];
 
-    // MANTENIDO: Asegurar que el campo sea booleano
     protected $casts = [
         'esta_activo' => 'boolean',
     ];
@@ -34,6 +39,7 @@ class Alumno extends Model
      */
     public function carrera()
     {
+        // Esto ya no marcará error
         return $this->belongsTo(Carrera::class, 'carrera_id');
     }
 
@@ -42,6 +48,7 @@ class Alumno extends Model
      */
     public function cicloEscolar()
     {
+        // Esto ya no marcará error
         return $this->belongsTo(CicloEscolar::class, 'ciclo_escolar_id');
     }
 
@@ -52,6 +59,7 @@ class Alumno extends Model
      */
     public function grupos()
     {
+        // Esto ya no marcará error
         return $this->belongsToMany(Grupo::class, 'alumno_grupo', 'alumno_id', 'grupo_id');
     }
 
@@ -60,7 +68,6 @@ class Alumno extends Model
 
     /**
      * Relación de uno a muchos con Calificaciones.
-     * Un alumno puede tener muchas calificaciones registradas.
      */
     public function calificaciones()
     {
@@ -69,57 +76,59 @@ class Alumno extends Model
 
     /**
      * Lógica para calcular la calificación final de un alumno.
-     * Calcula la calificación ponderada para una materia y un grupo específicos
      */
     public function calcularCalificacionFinal(int $materia_id, int $grupo_id)
     {
-        //Obtenemos todos los criterios de la materia con sus subtareas.
         $criteriosDeLaMateria = CriterioEvaluacion::where('materia_id', $materia_id)
-                                                ->where('grupo_id', $grupo_id) // Asegurarse que sean del grupo correcto
+                                                ->where('grupo_id', $grupo_id)
                                                 ->with('subtareas')
                                                 ->get();
 
         $calificacionFinal = 0;
 
-        //Iteramos sobre cada criterio principal (Ejercicios, Prácticas, Examen).
         foreach ($criteriosDeLaMateria as $criterio) {
-            
-            // Obtenemos las calificaciones de este alumno para este criterio específico.
+
             $calificaciones = $this->calificaciones()
                                      ->where('grupo_id', $grupo_id)
                                      ->where('criterio_evaluacion_id', $criterio->id)
                                      ->get();
 
             if ($calificaciones->isEmpty()) {
-                continue; // Si no hay calificaciones para este criterio, lo saltamos.
+                continue;
             }
 
             $sumaPonderadaDelCriterio = 0;
 
-            //Verificamos si el criterio tiene subtareas.
             if ($criterio->subtareas->count() > 0) {
-                //Criterio con subtareas
                 $sumaSubtareas = $calificaciones->sum('puntuacion_decimal');
                 $promedioSubtareas = $sumaSubtareas / $criterio->subtareas->count();
-
-                // Calculamos el valor ponderado 
                 $sumaPonderadaDelCriterio = ($promedioSubtareas * ($criterio->porcentaje_decimal / 100));
 
             } else {
-                //Criterio sin subtareas
                 $puntuacion = $calificaciones->first()->puntuacion_decimal ?? 0;
-
-                // Calculamos el valor ponderado 
                 $sumaPonderadaDelCriterio = ($puntuacion * ($criterio->porcentaje_decimal / 100));
             }
-            
-            //Sumamos el resultado de este criterio a la calificación final.
+
             $calificacionFinal += $sumaPonderadaDelCriterio;
         }
 
-        // Devolvemos la calificación final redondeada a 2 decimales.
         return round($calificacionFinal, 2);
     }
 
-    
+    // ==========================================================
+    // --- FUNCIÓN PARA LA PRUEBA UNITARIA ---
+    // ==========================================================
+
+    /**
+     * Define un accesor para obtener el nombre completo del alumno.
+     * EJ: $alumno->nombre_completo
+     */
+    protected function nombreCompleto(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value, $attributes) {
+                return trim($attributes['nombre'] . ' ' . $attributes['apellido_paterno'] . ' ' . $attributes['apellido_materno']);
+            }
+        );
+    }
 }
