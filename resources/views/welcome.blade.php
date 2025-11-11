@@ -1,64 +1,102 @@
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Sistema de Calificaciones - Panel Principal</title>
-    <style>
-        body { font-family: sans-serif; margin: 0; padding: 0; background-color: #f4f7f9; color: #333; }
-        .container { max-width: 800px; margin: 50px auto; padding: 30px; background: #fff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
-        h1 { color: #1e88e5; text-align: center; margin-bottom: 25px; }
-        .module-list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
-        .module-list li { width: 100%; max-width: 350px; }
-        .module-list a {
-            display: block;
-            padding: 15px 20px;
-            background-color: #f0f4f7;
-            border-radius: 8px;
-            text-decoration: none;
-            color: #333;
-            font-size: 1.1em;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            border-left: 5px solid #1e88e5;
-        }
-        .module-list a:hover {
-            background-color: #e3f2fd;
-            color: #1565c0;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        .subtitle { text-align: center; color: #555; margin-bottom: 30px; font-size: 1.2em; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Sistema de Gestión de Calificaciones</h1>
-        <p class="subtitle">Selecciona el módulo de administración al que deseas ingresar:</p>
+@extends('layouts.app')
 
-        <ul class="module-list">
+@section('title', 'Panel Principal')
 
-            {{-- MÓDULOS BASE (Tablas de Catálogo) --}}
-            <li><a href="{{ route('carreras.index') }}">📚 Gestión de Carreras</a></li>
-            <li><a href="{{ route('ciclos.index') }}">📅 Gestión de Ciclos Escolares</a></li>
-            <li><a href="{{ route('cuatrimestres.index') }}">🗓️ Gestión de Cuatrimestres</a></li>
-            <li><a href="{{ route('materias.index') }}">📘 Gestión de Materias</a></li>
+@section('content')
+<div class="py-12">
+    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
-            <hr style="width: 100%; border: none; margin: 15px 0;">
+        <div class="mb-10">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Panel de Control</h2>
 
-            {{-- MÓDULOS DE REGISTRO CLAVE --}}
-            <li><a href="{{ route('alumnos.index') }}">👤 Registro de Alumnos</a></li>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
-            {{-- MÓDULOS DE ESTRUCTURA Y CALIFICACIÓN --}}
-            <li><a href="{{ route('grupos.index') }}">👥 Gestión de Grupos / Matriculación</a></li>
+                <div class="bg-white shadow-lg rounded-xl p-6 flex items-center space-x-4">
+                    <span class="text-4xl">🗓️</span>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Cuatrimestre Actual</p>
+                        <p class="text-2xl font-bold text-blue-600">
+                            {{ $cuatrimestreActual ? $cuatrimestreActual->nombre : 'Ninguno' }}
+                        </p>
+                    </div>
+                </div>
 
-            {{-- Una vez que este listo el CRUD de Calificaciones, agregaremos el enlace --}}
-            {{-- <li><a href="#">💯 Registro de Calificaciones</a></li> --}}
-        </ul>
+                <div class="bg-white shadow-lg rounded-xl p-6 flex items-center space-x-4">
+                    <span class="text-4xl">👤</span>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Alumnos Activos</p>
+                        <p class="text-2xl font-bold text-gray-800">{{ $alumnosActivos }}</p>
+                    </div>
+                </div>
 
-        <p style="margin-top: 40px; text-align: center; font-size: 0.9em; color: #999;">
-            *Recuerda que para que el sistema funcione, debes registrar los módulos base (Carreras, Ciclos, Cuatrimestres) primero.
-        </p>
+                <div class="bg-white shadow-lg rounded-xl p-6 flex items-center space-x-4">
+                    <span class="text-4xl">👥</span>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Grupos Activos</p>
+                        <p class="text-2xl font-bold text-gray-800">{{ $gruposActivos }}</p>
+                    </div>
+                </div>
+
+                <div class="bg-white shadow-lg rounded-xl p-6 flex items-center space-x-4">
+                    <span class="text-4xl">📚</span>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Carreras Activas</p>
+                        <p class="text-2xl font-bold text-gray-800">{{ $carrerasActivas }}</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="mt-12">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Accesos Directos</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <a href="{{ route('alumnos.index') }}"
+                   class="md:col-span-1 flex items-center p-6 bg-white rounded-xl shadow-lg transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl border-l-4 border-blue-500">
+                    <span class="text-3xl">👤</span>
+                    <span class="ml-4 text-xl font-semibold text-gray-800">Registro de Alumnos</span>
+                </a>
+
+                <a href="{{ route('grupos.index') }}"
+                   class="md:col-span-1 flex items-center p-6 bg-white rounded-xl shadow-lg transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl border-l-4 border-purple-500">
+                    <span class="text-3xl">👥</span>
+                    <span class="ml-4 text-xl font-semibold text-gray-800">Gestión de Grupos</span>
+                </a>
+
+                <div class="md:col-span-2 p-6 bg-white rounded-xl shadow-lg">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Catálogos del Sistema</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        <a href="{{ route('carreras.index') }}"
+                           class="flex items-center p-4 bg-gray-50 rounded-lg transition-all duration-300 ease-in-out hover:bg-gray-100 hover:shadow-md">
+                            <span class="text-2xl">📚</span>
+                            <span class="ml-3 font-medium text-gray-700">Carreras</span>
+                        </a>
+
+                        <a href="{{ route('materias.index') }}"
+                           class="flex items-center p-4 bg-gray-50 rounded-lg transition-all duration-300 ease-in-out hover:bg-gray-100 hover:shadow-md">
+                            <span class="text-2xl">📘</span>
+                            <span class="ml-3 font-medium text-gray-700">Materias</span>
+                        </a>
+
+                        <a href="{{ route('cuatrimestres.index') }}"
+                           class="flex items-center p-4 bg-gray-50 rounded-lg transition-all duration-300 ease-in-out hover:bg-gray-100 hover:shadow-md">
+                            <span class="text-2xl">🗓️</span>
+                            <span class="ml-3 font-medium text-gray-700">Cuatrimestres</span>
+                        </a>
+
+                        <a href="{{ route('ciclos.index') }}"
+                           class="flex items-center p-4 bg-gray-50 rounded-lg transition-all duration-300 ease-in-out hover:bg-gray-100 hover:shadow-md">
+                            <span class="text-2xl">📅</span>
+                            <span class="ml-3 font-medium text-gray-700">Ciclos Escolares</span>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
     </div>
-</body>
-</html>
+</div>
+@endsection

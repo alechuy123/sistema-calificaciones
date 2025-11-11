@@ -4,91 +4,140 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Materia;
-use App\Models\Carrera; // Necesaria para el menú desplegable
+use App\Models\Carrera; 
+use App\Models\Unidad;  
+use Illuminate\Support\Facades\DB; 
 
 class MateriaController extends Controller
 {
     /**
-     * Muestra la lista de todas las materias, precargando las carreras asociadas.
+     * Muestra la lista de materias (precargando carreras y unidades)
      */
     public function index()
     {
-        $materias = Materia::with('carreras')->get();
+        $materias = Materia::with('carreras', 'unidades')->get();
         return view('materias.index', compact('materias'));
     }
 
     /**
-     * Muestra el formulario para crear una nueva materia.
+     * Muestra el formulario para crear (fusionado).
      */
     public function create()
     {
+        
         $carreras = Carrera::all();
         return view('materias.create', compact('carreras'));
     }
 
     /**
-     * Guarda una nueva materia en la base de datos.
+     * Guarda una nueva materia (fusionado).
      */
     public function store(Request $request)
     {
         $request->validate([
-            'nombre' => 'required|unique:materias|max:255',
-            'carreras' => 'required|array',
-            'carreras.*' => 'exists:carreras,id',
+            'nombre' => 'required|string|unique:materias|max:255',
+            'objetivo' => 'required|string', 
+            'carreras' => 'required|array|min:1', 
+            'carreras.*' => 'exists:carreras,id', 
+            'unidades' => 'required|array|min:1', 
+            'unidades.*.nombre' => 'required|string|max:255', 
         ]);
 
-        $materia = Materia::create(['nombre' => $request->input('nombre')]);
-        $materia->carreras()->attach($request->input('carreras'));
+        DB::transaction(function () use ($request) {
+            $materia = Materia::create([
+                'nombre' => $request->nombre,
+                'objetivo' => $request->objetivo,
+            ]);
+
+            $materia->carreras()->attach($request->input('carreras'));
+
+            foreach ($request->unidades as $unidadData) {
+                $materia->unidades()->create([
+                    'nombre' => $unidadData['nombre'],
+                ]);
+            }
+        });
 
         return redirect()->route('materias.index')
-                         ->with('success', 'Materia registrada y asignada a carreras con éxito.');
+                         ->with('success', 'Materia, unidades y carreras configuradas correctamente.');
     }
 
-    public function show(string $id) { /* ... */ }
+    
+    public function show(string $id)
+    {
+        // ... 
+    }
 
+    
+    /**
+     * Muestra el formulario para editar (fusionado).
+     */
     public function edit(Materia $materia)
     {
-        $carreras = Carrera::all();
+        $materia->load('unidades'); 
+        
+        $carreras = Carrera::all(); 
         return view('materias.edit', compact('materia', 'carreras'));
     }
 
     /**
-     * Actualiza la materia y sus carreras asociadas.
+     * Actualiza la materia (fusionado).
      */
     public function update(Request $request, Materia $materia)
     {
-        // 1. Validación
         $request->validate([
             'nombre' => 'required|max:255|unique:materias,nombre,' . $materia->id,
-            'carreras' => 'required|array',
-            'carreras.*' => 'exists:carreras,id',
-            'esta_activo' => 'boolean',
+            'objetivo' => 'required|string', 
+            'carreras' => 'required|array', 
+            'carreras.*' => 'exists:carreras,id', 
+            'unidades' => 'required|array|min:1', 
+            'unidades.*.nombre' => 'required|string|max:255', 
+            'unidades.*.id' => 'sometimes|nullable|integer|exists:unidads,id', 
+            'esta_activo' => 'boolean', 
         ]);
 
-        // 2. Preparar datos de actualización
-        // Usamos la función boolean() para obtener TRUE o FALSE de forma robusta.
-        $data = $request->only('nombre');
-        $data['esta_activo'] = $request->boolean('esta_activo');
+        DB::transaction(function () use ($request, $materia) {
+            
+            $data = $request->only(['nombre', 'objetivo']);
+            $data['esta_activo'] = $request->boolean('esta_activo');
+            $materia->update($data);
 
-        // 3. Actualizar la Materia. Ahora funciona porque 'esta_activo' está en $fillable.
-        $materia->update($data);
+            $materia->carreras()->sync($request->input('carreras'));
 
-        // 4. Sincronizar la relación Muchos a Muchos
-        $materia->carreras()->sync($request->input('carreras'));
+            $unidadesExistentesIds = [];
+            foreach ($request->unidades as $unidadData) {
+                if (is_numeric($unidadData['id'] ?? null) && (int)$unidadData['id'] > 0) {
+                   
+                    $materia->unidades()->where('id', $unidadData['id'])->update(['nombre' => $unidadData['nombre']]);
+                    $unidadesExistentesIds[] = (int)$unidadData['id'];
+                } else {
+                    
+                    $nuevaUnidad = $materia->unidades()->create(['nombre' => $unidadData['nombre']]);
+                    $unidadesExistentesIds[] = $nuevaUnidad->id;
+                }
+            }
+
+            $materia->unidades()->whereNotIn('id', $unidadesExistentesIds)->delete();
+        });
 
         return redirect()->route('materias.index')
-                         ->with('success', 'Materia y asociaciones actualizadas con éxito.');
+                         ->with('success', 'Materia actualizada correctamente.');
     }
 
-    /**
-     * Desactiva (Elimina Suavemente) una materia (usado por el botón 'Desactivar' del index).
-     */
+    
     public function destroy(Materia $materia)
     {
-        // CLAVE: Esto ahora funciona porque 'esta_activo' está en $fillable.
+        
         $materia->update(['esta_activo' => false]);
 
         return redirect()->route('materias.index')
                          ->with('success', 'Materia desactivada con éxito.');
+    }
+
+   
+    public function showInfoPublica(Materia $materia)
+    {
+        $materia->load('unidades.instrumentos');
+        return view('materias.info_publica', compact('materia'));
     }
 }

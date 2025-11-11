@@ -1,65 +1,97 @@
-<h1>Listado de Carreras</h1>
+@extends('layouts.app')
 
-<a href="{{ route('carreras.create') }}">Crear Nueva Carrera</a>
+@section('title', 'Gestión de Carreras')
 
-@if ($message = Session::get('success'))
-    <div style="color: green;">
-        <p>{{ $message }}</p>
+@section('content')
+<div class="py-12">
+    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Gestión de Carreras</h1>
+            <a href="{{ route('carreras.create') }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition duration-300">
+                <span class="font-semibold">Crear Nueva Carrera</span>
+            </a>
+        </div>
+
+        @if ($message = Session::get('success'))
+            <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-md shadow-sm" role="alert">
+                <p class="font-semibold">{{ $message }}</p>
+            </div>
+        @endif
+
+        <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+            @if($carreras->isEmpty())
+                <div class="p-8 text-center">
+                    <p class="text-lg text-gray-600">No hay carreras registradas.</p>
+                    <a href="{{ route('carreras.create') }}" class="mt-4 inline-block px-5 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition duration-300">
+                        ¡Registra la primera!
+                    </a>
+                </div>
+            @else
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @foreach ($carreras as $carrera)
+                                <tr class="hover:bg-gray-50 transition duration-150">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $carrera->id }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $carrera->nombre }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $carrera->descripcion }}</td>
+
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                        @if ($carrera->esta_activo)
+                                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                ✅ Activa
+                                            </span>
+                                        @else
+                                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                                ❌ Desactivada
+                                            </span>
+                                        @endif
+                                    </td>
+
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium flex items-center space-x-4">
+                                        <a href="{{ route('carreras.edit', $carrera->id) }}" class="text-indigo-600 hover:text-indigo-900">Editar</a>
+
+                                        @if ($carrera->esta_activo)
+                                            <form action="{{ route('carreras.destroy', $carrera->id) }}" method="POST" class="inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" onclick="return confirm('¿Quieres DESACTIVAR esta carrera?')" class="text-red-600 hover:text-red-900">
+                                                    Desactivar
+                                                </button>
+                                            </form>
+                                        @else
+                                            <form action="{{ route('carreras.update', $carrera->id) }}" method="POST" class="inline">
+                                                @csrf
+                                                @method('PUT')
+                                                {{-- Campos ocultos para pasar la validación y reactivar --}}
+                                                <input type="hidden" name="esta_activo" value="1">
+                                                <input type="hidden" name="nombre" value="{{ $carrera->nombre }}">
+                                                <input type="hidden" name="descripcion" value="{{ $carrera->descripcion }}">
+
+                                                <button type="submit" onclick="return confirm('¿Quieres REACTIVAR esta carrera?')" class="text-blue-600 hover:text-blue-900">
+                                                    Reactivar
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
+
     </div>
-@endif
-
-<table border="1">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Nombre</th>
-            <th>Descripción</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach ($carreras as $carrera)
-            <tr>
-                <td>{{ $carrera->id }}</td>
-                <td>{{ $carrera->nombre }}</td>
-                <td>{{ $carrera->descripcion }}</td>
-
-                {{-- Muestra el estado --}}
-                <td>
-                    @if ($carrera->esta_activo)
-                        <span style="color: green;">✅ Activa</span>
-                    @else
-                        <span style="color: red;">❌ Desactivada</span>
-                    @endif
-                </td>
-
-                <td>
-                    <a href="{{ route('carreras.edit', $carrera->id) }}">Editar</a>
-                    |
-
-                    @if ($carrera->esta_activo)
-                        {{-- Opción para DESACTIVAR (usa el método DELETE/destroy) --}}
-                        <form action="{{ route('carreras.destroy', $carrera->id) }}" method="POST" style="display:inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" onclick="return confirm('¿Estás seguro de que quieres DESACTIVAR esta carrera?')" style="background:none; border:none; color:red; cursor:pointer;">Desactivar</button>
-                        </form>
-                    @else
-                        {{-- Opción para REACTIVAR (usa el método PUT/update para cambiar el estado) --}}
-                        <form action="{{ route('carreras.update', $carrera->id) }}" method="POST" style="display:inline;">
-                            @csrf
-                            @method('PUT')
-                            {{-- CORRECCIÓN CLAVE: Campos ocultos para pasar la validación --}}
-                            <input type="hidden" name="esta_activo" value="1">
-                            <input type="hidden" name="nombre" value="{{ $carrera->nombre }}">
-                            <input type="hidden" name="descripcion" value="{{ $carrera->descripcion }}">
-
-                            <button type="submit" onclick="return confirm('¿Estás seguro de que quieres REACTIVAR esta carrera?')" style="background:none; border:none; color:blue; cursor:pointer;">Reactivar</button>
-                        </form>
-                    @endif
-                </td>
-            </tr>
-        @endforeach
-    </tbody>
-</table>
+</div>
+@endsection

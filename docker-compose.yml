@@ -23,7 +23,6 @@ services:
             - sail
         depends_on:
             - mysql
-
     mysql:
         image: 'mysql/mysql-server:8.0'
         ports:
@@ -49,22 +48,18 @@ services:
                 - '-p${DB_PASSWORD}'
             retries: 3
             timeout: 5s
-
-    # INICIO: Servicio de phpMyAdmin
     phpmyadmin:
         image: phpmyadmin/phpmyadmin
         ports:
-            - 8081:80 # Expone phpMyAdmin en el puerto 8081 de tu máquina
+            - '8081:80'
         environment:
-            PMA_HOST: mysql # Importante: Debe coincidir con el nombre del servicio de MySQL
+            PMA_HOST: mysql
             PMA_PORT: 3306
             MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
         depends_on:
             - mysql
         networks:
             - sail
-    # FIN: Servicio de phpMyAdmin
-
 networks:
     sail:
         driver: bridge

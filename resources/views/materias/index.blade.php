@@ -1,85 +1,107 @@
-<h1>Gestión de Materias</h1>
+@extends('layouts.app')
 
-<a href="{{ route('materias.create') }}">Registrar Nueva Materia</a>
-<br><br>
+@section('content')
+<div class="container mt-4">
+    <a href="{{ url('/') }}" class="btn btn-outline-secondary mb-3">
+        <i class="fas fa-arrow-left"></i> Volver al Inicio
+    </a>
 
-{{-- Muestra el mensaje de éxito --}}
-@if ($message = Session::get('success'))
-    <div style="color: green;">
-        <p>{{ $message }}</p>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Gestión de Materias</h1>
+        <a href="{{ route('materias.create') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Registrar Nueva Materia
+        </a>
     </div>
-@endif
 
-@if($materias->isEmpty())
-    <p>No hay materias registradas. <a href="{{ route('materias.create') }}">¡Registra la primera!</a></p>
-@else
-    <table border="1" cellpadding="10" cellspacing="0">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nombre</th>
-                <th>Estado</th> {{-- NUEVO: Columna para el estado --}}
-                <th>Asignada a Carreras</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($materias as $materia)
-                <tr>
-                    <td>{{ $materia->id }}</td>
-                    <td>{{ $materia->nombre }}</td>
+    {{-- Muestra el mensaje de éxito --}}
+    @if ($message = Session::get('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ $message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
 
-                    {{-- Muestra el estado --}}
-                    <td>
-                        @if ($materia->esta_activo)
-                            <span style="color: green;">✅ Activa</span>
-                        @else
-                            <span style="color: red;">❌ Desactivada</span>
-                        @endif
-                    </td>
+    @if($materias->isEmpty())
+        <div class="alert alert-info">
+            No hay materias registradas. <a href="{{ route('materias.create') }}">¡Registra la primera!</a>
+        </div>
+    @else
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <table class="table table-hover table-striped align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Estado</th>
+                            <th>Unidades</th>
+                            <th>Asignada a Carreras</th>
+                            <th style="width: 280px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($materias as $materia)
+                            <tr>
+                                <td>{{ $materia->id }}</td>
+                                <td>{{ $materia->nombre }}</td>
 
-                    <td>
-                        {{-- Itera sobre la colección de carreras relacionadas (Muchos a Muchos) --}}
-                        @forelse($materia->carreras as $carrera)
-                            <span style="border: 1px solid #ccc; padding: 2px; margin-right: 5px; display: inline-block;">
-                                {{ $carrera->nombre }}
-                            </span>
-                        @empty
-                            <span style="color: gray;">Sin asignación.</span>
-                        @endforelse
-                    </td>
+                                {{-- Estado --}}
+                                <td>
+                                    @if ($materia->esta_activo)
+                                        <span class="badge bg-success">✅ Activa</span>
+                                    @else
+                                        <span class="badge bg-danger">❌ Desactivada</span>
+                                    @endif
+                                </td>
 
-                    <td>
-                        {{-- Enlace EDITAR --}}
-                        <a href="{{ route('materias.edit', $materia->id) }}">Editar</a>
-                        |
+                                <td>
+                                    <span class="badge bg-secondary">{{ $materia->unidades->count() }}</span>
+                                </td>
 
-                        @if ($materia->esta_activo)
-                            {{-- Opción para DESACTIVAR (usa el método DELETE/destroy) --}}
-                            <form action="{{ route('materias.destroy', $materia->id) }}" method="POST" style="display:inline;">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" onclick="return confirm('¿Quieres DESACTIVAR esta materia?')" style="background:none; border:none; color:red; cursor:pointer;">Desactivar</button>
-                            </form>
-                        @else
-                            {{-- Opción para REACTIVAR (usa el método PUT/update) --}}
-                            <form action="{{ route('materias.update', $materia->id) }}" method="POST" style="display:inline;">
-                                @csrf
-                                @method('PUT')
-                                {{-- Campos ocultos para pasar la validación y reactivar el estado --}}
-                                <input type="hidden" name="esta_activo" value="1">
-                                <input type="hidden" name="nombre" value="{{ $materia->nombre }}">
-                                {{-- Es crucial pasar la lista de carreras para que sync NO las borre --}}
-                                @foreach($materia->carreras as $carrera)
-                                    <input type="hidden" name="carreras[]" value="{{ $carrera->id }}">
-                                @endforeach
+                                {{-- Carreras --}}
+                                <td>
+                                    @forelse($materia->carreras as $carrera)
+                                        <span class="badge bg-light text-dark border">
+                                            {{ $carrera->nombre }}
+                                        </span>
+                                    @empty
+                                        <span class="text-muted small">Sin asignación.</span>
+                                    @endforelse
+                                </td>
 
-                                <button type="submit" onclick="return confirm('¿Quieres REACTIVAR esta materia?')" style="background:none; border:none; color:blue; cursor:pointer;">Reactivar</button>
-                            </form>
-                        @endif
-                    </td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
-@endif
+                                <td>
+                                    <a href="{{ route('materia.publica.info', $materia->id) }}" class="btn btn-info btn-sm" title="Ver">
+                                        <i class="fas fa-eye">ver Materia</i>
+                                    </a>
+                                    
+                                    <a href="{{ route('evaluacion.show', $materia->id) }}" class="btn btn-secondary btn-sm" title="Configurar Evaluación">
+                                        <i class="fas fa-tasks">Editar Evaluación</i>
+                                    </a>
+                                    
+                                    <a href="{{ route('materias.edit', $materia->id) }}" class="btn btn-warning btn-sm" title="Editar">
+                                        <i class="fas fa-edit">Editar</i>
+                                    </a>
+
+                                    @if ($materia->esta_activo)
+                                        <form action="{{ route('materias.destroy', $materia->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Quieres DESACTIVAR esta materia?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger btn-sm" title="Desactivar">
+                                                <i class="fas fa-trash-alt">Desactivar</i>
+                                            </button>
+                                        </form>
+                                    @else
+                                         <a href="{{ route('materias.edit', $materia->id) }}" class="btn btn-success btn-sm" title="Reactivar (desde Editar)">
+                                            <i class="fas fa-check">Activar</i>
+                                         </a>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
+</div>
+@endsection
