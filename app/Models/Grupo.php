@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-// --- ¡NUEVAS IMPORTACIONES! ---
-// (Para corregir los errores de "clase no encontrada" en tu editor)
+// --- IMPORTACIONES LIMPIADAS ---
+// (Se eliminaron las duplicadas)
 use App\Models\Materia;
 use App\Models\Cuatrimestre;
 use App\Models\Carrera;
@@ -97,6 +97,7 @@ class Grupo extends Model
 
     // ==========================================================
     // --- ¡NUEVA FUNCIÓN PARA LA PRUEBA UNITARIA! ---
+    // (Esta es la función que conservamos de tu rama HEAD)
     // ==========================================================
 
     /**
