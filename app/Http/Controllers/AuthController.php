@@ -69,7 +69,7 @@ class AuthController extends Controller
         }
 
         return back()->withErrors([
-            'email' => 'Este usuario no fue encontrado.',
+            'email' => 'Las credenciales son incorrectas.',
         ])->onlyInput('email');
     }
 
