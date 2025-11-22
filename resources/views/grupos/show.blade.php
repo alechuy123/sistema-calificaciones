@@ -89,30 +89,62 @@
                      </p>
                 </div>
 
-                <div class="overflow-x-auto">
+               <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th scope="col" class="w-16 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matricular</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matrícula</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre Completo</th>
+                                <th scope="col" class="w-16 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
+                                    Inscrito
+                                </th>
+
+                                {{--
+                                    ENCABEZADOS CON ENLACES DE ORDENAMIENTO
+                                    Al hacer clic, recarga la página ordenando por esa columna
+                                --}}
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <a href="{{ route('grupos.show', ['grupo' => $grupo->id, 'sort' => 'matricula', 'direction' => request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="hover:text-blue-600 flex items-center">
+                                        Matrícula
+                                        @if(request('sort') == 'matricula') <span>{{ request('direction') == 'asc' ? '▲' : '▼' }}</span> @endif
+                                    </a>
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <a href="{{ route('grupos.show', ['grupo' => $grupo->id, 'sort' => 'apellido_paterno', 'direction' => request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="hover:text-blue-600 flex items-center">
+                                        Apellido Paterno
+                                        @if(request('sort', 'apellido_paterno') == 'apellido_paterno') <span>{{ request('direction') == 'asc' ? '▲' : '▼' }}</span> @endif
+                                    </a>
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <a href="{{ route('grupos.show', ['grupo' => $grupo->id, 'sort' => 'apellido_materno', 'direction' => request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="hover:text-blue-600 flex items-center">
+                                        Apellido Materno
+                                        @if(request('sort') == 'apellido_materno') <span>{{ request('direction') == 'asc' ? '▲' : '▼' }}</span> @endif
+                                    </a>
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <a href="{{ route('grupos.show', ['grupo' => $grupo->id, 'sort' => 'nombre', 'direction' => request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="hover:text-blue-600 flex items-center">
+                                        Nombre(s)
+                                        @if(request('sort') == 'nombre') <span>{{ request('direction') == 'asc' ? '▲' : '▼' }}</span> @endif
+                                    </a>
+                                </th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @forelse ($alumnos_disponibles as $alumno)
-                                <tr class="hover:bg-gray-50 transition duration-150">
+                                <tr class="hover:bg-gray-50 transition duration-150 {{ in_array($alumno->id, $alumnos_matriculados_ids) ? 'bg-blue-50' : '' }}">
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
                                         <input type="checkbox" name="alumnos_ids[]" value="{{ $alumno->id }}"
                                                {{ in_array($alumno->id, $alumnos_matriculados_ids) ? 'checked' : '' }}
-                                               class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                               class="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer">
                                     </td>
+
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $alumno->matricula }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $alumno->nombre }} {{ $alumno->apellido_paterno }} {{ $alumno->apellido_materno }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $alumno->apellido_paterno }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $alumno->apellido_materno }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $alumno->nombre }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="3" class="px-6 py-12 text-center">
-                                        <p class="text-lg text-gray-500">No hay alumnos disponibles en la carrera '{{ $grupo->carrera->nombre }}' para matricular.</p>
+                                    <td colspan="5" class="px-6 py-12 text-center">
+                                        <p class="text-lg text-gray-500">No hay alumnos disponibles en la carrera '{{ $grupo->carrera->nombre }}'.</p>
                                     </td>
                                 </tr>
                             @endforelse

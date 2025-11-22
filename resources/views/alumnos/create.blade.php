@@ -3,6 +3,23 @@
 @section('title', 'Registrar Alumno')
 
 @section('content')
+
+{{--
+    SOLUCIÓN AL ERROR:
+    Movemos la lógica PHP aquí arriba para que no estorbe al @foreach en el HTML.
+    Si hay un "old(carrera_id)" (error de validación), cargamos los grupos de esa carrera.
+--}}
+@php
+    $grupos_old = collect([]); // Colección vacía por defecto
+
+    if(old('carrera_id')) {
+        $carrera = \App\Models\Carrera::find(old('carrera_id'));
+        if($carrera) {
+            $grupos_old = $carrera->grupos()->where('esta_activo', 1)->get();
+        }
+    }
+@endphp
+
 <div class="py-12">
     <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
 
@@ -32,7 +49,6 @@
                     @csrf
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
                         <div class="md:col-span-2">
                             <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre(s)</label>
                             <input type="text" name="nombre" id="nombre" value="{{ old('nombre') }}" required
@@ -46,14 +62,14 @@
                         </div>
 
                         <div>
-                            <label for="apellido_materno" class="block text-sm font-medium text-gray-700">Apellido Materno</LAbel>
+                            <label for="apellido_materno" class="block text-sm font-medium text-gray-700">Apellido Materno</label>
                             <input type="text" name="apellido_materno" id="apellido_materno" value="{{ old('apellido_materno') }}"
                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
 
                         <div>
-                            <label for="matricula" class="block text-sm font-medium text-gray-700">Matrícula</label>
-                            <input type="text" name="matricula" id="matricula" value="{{ old('matricula') }}" required
+                            <label for="matricula" class="block text-sm font-medium text-gray-700">Matrícula (Opcional)</label>
+                            <input type="text" name="matricula" id="matricula" value="{{ old('matricula') }}"
                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
 
@@ -87,34 +103,35 @@
                     <hr>
                     <div>
                         <label for="grupo_id" class="block text-sm font-medium text-gray-700">2. Asignar a Grupo (Opcional)</label>
+
+                        <!--
+                             El 'disabled' depende de si tenemos grupos cargados (por old) o no.
+                             Si $grupos_old tiene datos, NO debe estar disabled.
+                        -->
                         <select name="grupo_id" id="grupo_select"
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-100"
-                                disabled> <option value="">-- Primero seleccione una carrera --</option>
+                                {{ $grupos_old->isEmpty() ? 'disabled' : '' }}>
 
-                            @php
-                                $grupos_old = []; // Inicializa un array vacío
-                                if(old('carrera_id') && old('grupo_id')) {
-                                    $carrera_old = \App\Models\Carrera::find(old('carrera_id'));
-                                    // Comprueba que la carrera exista antes de llamar a ->grupos()
-                                    if ($carrera_old) {
-                                        $grupos_old = $carrera_old->grupos()->where('grupos.esta_activo', 1)->get();
-                                    }
-                                }
-                            @endphp
+                            <option value="">
+                                {{ $grupos_old->isEmpty() ? '-- Primero seleccione una carrera --' : '-- No asignar a un grupo aún --' }}
+                            </option>
 
-                            @if(!empty($grupos_old))
-                                @foreach($grupos_old as $grupo)
-                                    <option value="{{ $grupo->id }}" {{ old('grupo_id') == $grupo->id ? 'selected' : '' }}>
-                                        {{ $grupo->nombre }}
-                                    </option>
-                                @endforeach
-                            @endif
+                            <!--
+                                Aquí iteramos la variable que preparamos arriba en el @php.
+                                Ya no hay lógica compleja aquí, solo un foreach limpio.
+                            -->
+                            @foreach($grupos_old as $grupo)
+                                <option value="{{ $grupo->id }}" {{ old('grupo_id') == $grupo->id ? 'selected' : '' }}>
+                                    {{ $grupo->nombre }}
+                                </option>
+                            @endforeach
 
                         </select>
                          <p class="mt-1 text-sm text-gray-500">
                             (Solo se mostrarán grupos de la carrera seleccionada)
                         </p>
                     </div>
+
                     <div class="flex justify-end pt-6">
                         <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition duration-300">
                             Guardar Alumno
@@ -128,35 +145,28 @@
 
 @push('scripts')
 <script>
-    // Se ejecuta cuando todo el HTML ha sido cargado
     document.addEventListener('DOMContentLoaded', function () {
 
         const carreraSelect = document.getElementById('carrera_select');
         const grupoSelect = document.getElementById('grupo_select');
 
-        // Función para cargar grupos
         function cargarGrupos(carreraId) {
-            // Limpiar el select de grupos
             grupoSelect.innerHTML = '<option value="">Cargando...</option>';
+            grupoSelect.disabled = true; // Deshabilitar mientras carga
 
             if (!carreraId) {
                 grupoSelect.innerHTML = '<option value="">-- Primero seleccione una carrera --</option>';
-                grupoSelect.disabled = true;
                 return;
             }
 
-            // Hacer la llamada a la API que creamos
             fetch(`/api/carreras/${carreraId}/grupos`)
                 .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Error en la respuesta de la red');
-                    }
+                    if (!response.ok) throw new Error('Error en la red');
                     return response.json();
                 })
                 .then(grupos => {
-                    grupoSelect.innerHTML = ''; // Limpiar "Cargando..."
+                    grupoSelect.innerHTML = '';
 
-                    // Añadir la opción de "No asignar"
                     const defaultOption = document.createElement('option');
                     defaultOption.value = "";
                     defaultOption.textContent = "-- No asignar a un grupo aún --";
@@ -168,41 +178,24 @@
                     } else {
                         grupos.forEach(grupo => {
                             const option = document.createElement('option');
-                            // --- ¡CORRECCIÓN! ---
-                            option.value = grupo.id; // <-- Se usa . (punto)
-                            option.textContent = grupo.nombre; // <-- Se usa . (punto)
-                            // --- FIN CORRECCIÓN ---
+                            option.value = grupo.id;
+                            option.textContent = grupo.nombre;
                             grupoSelect.appendChild(option);
                         });
-                        grupoSelect.disabled = false;
+                        grupoSelect.disabled = false; // Habilitar si hay grupos
                     }
                 })
                 .catch(error => {
-                    console.error('Error al cargar los grupos:', error);
-                    grupoSelect.innerHTML = '<option value="" disabled>-- Error al cargar grupos --</option>';
-                    grupoSelect.disabled = true;
+                    console.error('Error:', error);
+                    grupoSelect.innerHTML = '<option value="" disabled>-- Error al cargar --</option>';
                 });
         }
 
-        // Añadir un "listener" al <select> de Carreras
+        // Escuchar cambios
         carreraSelect.addEventListener('change', function() {
             cargarGrupos(this.value);
         });
-
-        // Si hay un valor "old" (por un error de validación),
-        // disparamos la carga inicial y reactivamos el select.
-        @if(old('carrera_id'))
-            cargarGrupos(carreraSelect.value);
-            grupoSelect.disabled = false;
-
-            // Re-seleccionar el grupo "old" si existe
-            @if(old('grupo_id'))
-                // Necesitamos un pequeño retraso para asegurar que el fetch termine
-                setTimeout(() => {
-                    grupoSelect.value = "{{ old('grupo_id') }}";
-                }, 500);
-            @endif
-        @endif
     });
 </script>
 @endpush
+@endsection
