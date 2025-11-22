@@ -70,20 +70,31 @@ class GrupoController extends Controller
     /**
      * Muestra la lista para matricular alumnos (Filtra por carrera).
      */
-    public function show(string $id)
+    public function show(Request $request, string $id) // <--- OJO: Añadí Request $request aquí
     {
-        // Esto está correcto: Carga 'materias' (plural) y el historial
         $grupo = Grupo::with([
             'materias',
             'cuatrimestre',
             'carrera',
             'alumnos',
-            'grupoAnterior', // <-- Historial
-            'grupoSiguiente'  // <-- Historial
+            'grupoAnterior',
+            'grupoSiguiente'
         ])->findOrFail($id);
+
+        // --- LÓGICA DE ORDENAMIENTO ---
+        // Por defecto ordena por 'apellido_paterno', pero si la URL dice otra cosa (?sort=nombre), usa eso.
+        $sortField = $request->query('sort', 'apellido_paterno');
+        $sortDirection = $request->query('direction', 'asc');
+
+        // Validamos que solo se ordene por campos permitidos para evitar errores
+        $allowedFields = ['matricula', 'apellido_paterno', 'apellido_materno', 'nombre'];
+        if (!in_array($sortField, $allowedFields)) {
+            $sortField = 'apellido_paterno';
+        }
 
         $alumnos_disponibles = Alumno::where('carrera_id', $grupo->carrera_id)
                                         ->where('esta_activo', 1)
+                                        ->orderBy($sortField, $sortDirection) // <--- Aplicamos el orden
                                         ->get();
 
         $alumnos_matriculados_ids = $grupo->alumnos->pluck('id')->toArray();

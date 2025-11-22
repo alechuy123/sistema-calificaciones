@@ -54,9 +54,9 @@
                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
 
-                        <div>
-                            <label for="matricula" class="block text-sm font-medium text-gray-700">Matrícula</label>
-                            <input type="text" name="matricula" id="matricula" value="{{ old('matricula', $alumno->matricula) }}" required
+                       <div>
+                            <label for="matricula" class="block text-sm font-medium text-gray-700">Matrícula (Opcional)</label>
+                            <input type="text" name="matricula" id="matricula" value="{{ old('matricula', $alumno->matricula) }}"
                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
 
