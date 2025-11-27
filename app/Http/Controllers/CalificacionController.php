@@ -7,21 +7,19 @@ use App\Models\Grupo;
 use App\Models\Materia;
 use App\Models\Unidad;
 use App\Models\Calificacion;
-use App\Models\Alumno; // Asegúrate de que este modelo exista y esté importado
+use App\Models\Alumno;
 
 class CalificacionController extends Controller
 {
     // =========================================================================
-    // MÉTODOS PARA TU NUEVA PÁGINA "SELECTOR" (Paso 1B)
+    // MÉTODOS PARA EL SELECTOR ORIGINAL (Paso 1: Grupo -> Materia -> Unidad)
     // =========================================================================
 
     /**
-     * Muestra la página del selector de 3 pasos (Grupo -> Materia -> Unidad).
+     * Muestra la página del selector inicial.
      */
     public function showSelector()
     {
-        // Cargamos solo grupos activos y con sus relaciones de carrera
-        // Asumiendo que tienes un campo 'esta_activo'
         $grupos = Grupo::with('carrera')
                     ->where('esta_activo', 1) 
                     ->orderBy('nombre')
@@ -34,31 +32,48 @@ class CalificacionController extends Controller
 
     /**
      * API: Devuelve las materias de un grupo específico.
-     * Usado por el JavaScript del selector.
      */
     public function getMateriasPorGrupo(Grupo $grupo)
     {
-        // Carga las materias que están asignadas a este grupo
-        // (Asegúrate de tener la relación 'materias' en tu modelo Grupo)
         $materias = $grupo->materias()->orderBy('nombre')->get();
         return response()->json($materias);
     }
 
     /**
      * API: Devuelve las unidades de una materia específica.
-     * Usado por el JavaScript del selector.
      */
     public function getUnidadesPorMateria(Materia $materia)
     {
-        // Carga las unidades que pertenecen a esta materia
-        // (Asegúrate de tener la relación 'unidades' en tu modelo Materia)
         $unidades = $materia->unidades()->orderBy('nombre')->get(); 
         return response()->json($unidades);
     }
 
+    // =========================================================================
+    // NUEVO MÉTODO: FLUJO DESDE MATERIAS (Paso 1: Materia -> Paso 2: Grupo)
+    // =========================================================================
+
+    /**
+     * Muestra la pantalla para elegir Grupo, dado que ya eligieron la Materia.
+     * Este es el método que usa el botón "Calificar" en materias.index
+     */
+    public function showSelectorPorMateria(Materia $materia)
+    {
+        // Buscamos los grupos que tienen esta materia asignada
+        // Asegúrate de tener la relación 'grupos()' en tu modelo Materia
+        $grupos = $materia->grupos()
+                          ->where('esta_activo', 1)
+                          ->orderBy('nombre')
+                          ->get();
+
+        return view('calificaciones.selector', [
+            'materia' => $materia,
+            'grupos' => $grupos
+        ]);
+    }
+
 
     // =========================================================================
-    // MÉTODOS PARA LA "HOJA DE CALIFICACIÓN" (Los que ya habíamos hecho)
+    // MÉTODOS PARA LA "HOJA DE CALIFICACIÓN"
     // =========================================================================
 
     /**
@@ -67,11 +82,9 @@ class CalificacionController extends Controller
     public function showHojaDeCalificacion(Grupo $grupo, Materia $materia, Unidad $unidad)
     {
         // 1. Cargar los alumnos del grupo
-        // (Asegúrate de tener la relación 'alumnos' en tu modelo Grupo)
         $alumnos = $grupo->alumnos()->orderBy('apellido_paterno')->get();
 
         // 2. Cargar los instrumentos de la unidad
-        // (Asegúrate de tener la relación 'instrumentos' en tu modelo Unidad)
         $instrumentos = $unidad->instrumentos()->orderBy('id')->get(); 
 
         // 3. Cargar las calificaciones QUE YA EXISTEN
@@ -79,14 +92,13 @@ class CalificacionController extends Controller
                                              ->whereIn('alumno_id', $alumnos->pluck('id'))
                                              ->get()
                                              ->keyBy(function ($item) {
-                                                 // Creamos una llave "alumno_id-instrumento_id"
                                                  return $item->alumno_id . '-' . $item->instrumento_id;
                                              });
 
         // 4. Mandar todo a la vista
         return view('calificaciones.hoja', [
             'grupo' => $grupo,
-            'materia' => $materia, // Pasamos la materia a la vista
+            'materia' => $materia,
             'unidad' => $unidad,
             'alumnos' => $alumnos,
             'instrumentos' => $instrumentos,
@@ -95,38 +107,51 @@ class CalificacionController extends Controller
     }
 
     /**
-     * Guarda o actualiza una calificación específica (vía Fetch/JS).
+     * Guarda, actualiza O ELIMINA una calificación específica (vía Fetch/JS).
      */
     public function storeOrUpdate(Request $request)
     {
-        // Validar los datos que llegan
+        // 1. VALIDACIÓN
         $datosValidados = $request->validate([
             'alumno_id' => 'required|integer|exists:alumnos,id',
             'instrumento_id' => 'required|integer|exists:instrumentos,id',
-            'calificacion' => 'required|numeric|min:0|max:10' // O la escala que uses
+            'calificacion' => 'nullable|numeric|min:0|max:10' 
         ]);
 
+        $alumnoId = $datosValidados['alumno_id'];
+        $instrumentoId = $datosValidados['instrumento_id'];
+        $calificacionValor = $datosValidados['calificacion'];
+
         try {
-            $calificacion = Calificacion::updateOrCreate(
+            // 2. CASO ELIMINAR: Si el valor es NULL (casilla vacía)
+            if (is_null($calificacionValor)) {
+                Calificacion::where('alumno_id', $alumnoId)
+                            ->where('instrumento_id', $instrumentoId)
+                            ->delete();
+
+                return response()->json([
+                    'success' => true, 
+                    'message' => 'Calificación eliminada correctamente.'
+                ]);
+            }
+
+            // 3. CASO GUARDAR/ACTUALIZAR: Si hay un número (incluido el 0)
+            Calificacion::updateOrCreate(
                 [
-                    // Qué buscar
-                    'alumno_id' => $datosValidados['alumno_id'],
-                    'instrumento_id' => $datosValidados['instrumento_id']
+                    'alumno_id' => $alumnoId,
+                    'instrumento_id' => $instrumentoId
                 ],
                 [
-                    // Con qué actualizar/crear
-                    'calificacion_obtenida' => $datosValidados['calificacion']
+                    'calificacion_obtenida' => $calificacionValor
                 ]
             );
 
-            // Responder con éxito
             return response()->json([
                 'success' => true, 
                 'message' => 'Calificación guardada.'
             ]);
 
         } catch (\Exception $e) {
-            // Responder con error
             return response()->json([
                 'success' => false, 
                 'message' => 'Error al guardar: ' . $e->getMessage()

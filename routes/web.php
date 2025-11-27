@@ -50,7 +50,7 @@ Route::middleware('auth')->group(function () {
 
 
     // --- TUS RUTAS DE GESTIÓN (Ahora protegidas) ---
-    Route::resource('carreras', CarreraController::class); // Se corrigió un typo aquí (decía RouteT::)
+    Route::resource('carreras', CarreraController::class); 
     Route::resource('ciclos', CicloEscolarController::class);
     Route::resource('alumnos', AlumnoController::class);
     Route::resource('materias', MateriaController::class);
@@ -69,21 +69,24 @@ Route::middleware('auth')->group(function () {
     Route::post('/grupos/{grupo}/promover', [GrupoController::class, 'promover'])->name('grupos.promover');
 
 
-    // --- Rutas obsoletas de Criterios y Calificaciones (de Alejandro) ELIMINADAS ---
-
-
     // --- INICIO: Rutas de Calificación (Tu nueva idea + GERA) ---
     
-    // 1. (TU NUEVA IDEA) Ruta para MOSTRAR el "Selector" de 3 dropdowns  // <<< RUTA NUEVA >>>
+    // 1. Ruta para MOSTRAR el "Selector" de 3 dropdowns (Flujo original)
     Route::get('/calificar/seleccionar', [CalificacionController::class, 'showSelector'])
          ->name('calificaciones.selector');
+         
+    // 1.B. NUEVA RUTA: Selector iniciando desde MATERIA (Flujo nuevo)
+    // Esta es la ruta que usa el botón "Calificar" en la lista de materias
+    // URL: /calificaciones/por-materia/5
+    Route::get('/calificaciones/por-materia/{materia}', [CalificacionController::class, 'showSelectorPorMateria'])
+         ->name('calificaciones.por_materia'); // <<< RUTA NUEVA AGREGADA AQUÍ >>>
     
-    // 2. (GERA) Ruta para MOSTRAR la hoja de calificación (la tabla HTML)
+    // 2. Ruta para MOSTRAR la hoja de calificación (la tabla HTML)
     // URL: /grupos/1/materias/5/unidades/8/calificar
     Route::get('/grupos/{grupo}/materias/{materia}/unidades/{unidad}/calificar', [CalificacionController::class, 'showHojaDeCalificacion'])
          ->name('calificaciones.hoja');
     
-    // 3. (GERA) Ruta para GUARDAR (vía JS/Fetch) una calificación de la hoja
+    // 3. Ruta para GUARDAR (vía JS/Fetch) una calificación de la hoja
     Route::post('/calificaciones/guardar-unidad', [CalificacionController::class, 'storeOrUpdate'])
          ->name('calificaciones.guardar.unidad');
     
@@ -104,17 +107,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/carreras/{carrera}/materias', [GrupoController::class, 'getMateriasPorCarrera'])
           ->name('api.carreras.materias');
 
-    // --- ¡NUEVA RUTA AÑADIDA! ---
     // API para JavaScript (Formulario de Alumnos)
     Route::get('/api/carreras/{carrera}/grupos', [AlumnoController::class, 'getGruposPorCarrera'])
           ->name('api.carreras.grupos');
 
-    // --- (TU NUEVA IDEA) API para el "Selector" de Calificaciones ---  // <<< RUTA NUEVA >>>
+    // API para el "Selector" de Calificaciones
     Route::get('/api/grupos/{grupo}/materias', [CalificacionController::class, 'getMateriasPorGrupo'])
          ->name('api.grupos.materias');
     
-    Route::get('/api/materias/{materia}/unidades', [CalificacionController::class, 'getUnidadesPorMateria']) // <<< RUTA NUEVA >>>
+    Route::get('/api/materias/{materia}/unidades', [CalificacionController::class, 'getUnidadesPorMateria'])
          ->name('api.materias.unidades');
-    // --- FIN DE RUTAS NUEVAS ---
 
 });

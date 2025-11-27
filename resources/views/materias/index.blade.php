@@ -36,7 +36,8 @@
                             <th>Estado</th>
                             <th>Unidades</th>
                             <th>Asignada a Carreras</th>
-                            <th style="width: 280px;">Acciones</th>
+                            {{-- AUMENTÉ EL ANCHO A 420px PARA QUE QUEPAN LOS 5 BOTONES CON TEXTO --}}
+                            <th style="width: 420px;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -69,32 +70,44 @@
                                     @endforelse
                                 </td>
 
+                                {{-- ACCIONES --}}
                                 <td>
-                                    <a href="{{ route('materia.publica.info', $materia->id) }}" class="btn btn-info btn-sm" title="Ver">
-                                        <i class="fas fa-eye">ver Materia</i>
-                                    </a>
-                                    
-                                    <a href="{{ route('evaluacion.show', $materia->id) }}" class="btn btn-secondary btn-sm" title="Configurar Evaluación">
-                                        <i class="fas fa-tasks">Editar Evaluación</i>
-                                    </a>
-                                    
-                                    <a href="{{ route('materias.edit', $materia->id) }}" class="btn btn-warning btn-sm" title="Editar">
-                                        <i class="fas fa-edit">Editar</i>
-                                    </a>
+                                    <div class="d-flex gap-1 flex-wrap">
+                                        {{-- 1. CALIFICAR --}}
+                                        <a href="{{ route('calificaciones.por_materia', $materia->id) }}" class="btn btn-primary btn-sm" title="Ingresar Calificaciones">
+                                            <i class="fas fa-clipboard-check"></i> Calificar
+                                        </a>
 
-                                    @if ($materia->esta_activo)
-                                        <form action="{{ route('materias.destroy', $materia->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Quieres DESACTIVAR esta materia?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-danger btn-sm" title="Desactivar">
-                                                <i class="fas fa-trash-alt">Desactivar</i>
-                                            </button>
-                                        </form>
-                                    @else
-                                         <a href="{{ route('materias.edit', $materia->id) }}" class="btn btn-success btn-sm" title="Reactivar (desde Editar)">
-                                            <i class="fas fa-check">Activar</i>
-                                         </a>
-                                    @endif
+                                        {{-- 2. VER --}}
+                                        <a href="{{ route('materia.publica.info', $materia->id) }}" class="btn btn-info btn-sm text-white" title="Ver detalle">
+                                            <i class="fas fa-eye"></i> Ver
+                                        </a>
+                                        
+                                        {{-- 3. EVALUACIÓN --}}
+                                        <a href="{{ route('evaluacion.show', $materia->id) }}" class="btn btn-secondary btn-sm" title="Configurar Evaluación">
+                                            <i class="fas fa-tasks"></i> Evaluación
+                                        </a>
+                                        
+                                        {{-- 4. EDITAR --}}
+                                        <a href="{{ route('materias.edit', $materia->id) }}" class="btn btn-warning btn-sm" title="Editar">
+                                            <i class="fas fa-edit"></i> Editar
+                                        </a>
+
+                                        {{-- 5. DESACTIVAR / ACTIVAR --}}
+                                        @if ($materia->esta_activo)
+                                            <form action="{{ route('materias.destroy', $materia->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Quieres DESACTIVAR esta materia?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-danger btn-sm" title="Desactivar">
+                                                    <i class="fas fa-trash-alt"></i> Desactivar
+                                                </button>
+                                            </form>
+                                        @else
+                                            <a href="{{ route('materias.edit', $materia->id) }}" class="btn btn-success btn-sm" title="Reactivar">
+                                                <i class="fas fa-check"></i> Activar
+                                            </a>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
