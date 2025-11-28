@@ -1,267 +1,371 @@
-{{-- 
-  Este es el Paso 3: La VISTA.
-  Usa este archivo, ya que SÍ tienes un layout.
---}}
-
-@extends('layouts.app') {{-- ¡CORREGIDO: 'layaout.app' en lugar de 'layouts.app'! --}}
+@extends('layouts.app')
 
 @section('content')
-<div class="container"> {{-- Asumiendo que tu layout no provee un 'container' --}}
-    
-    {{-- 1. EL CONTEXTO: Qué se está calificando --}}
-    <div class="row mb-3">
 
-        
-        <div class="col">
-            <h2>Hoja de Calificación</h2>
-            <p class="lead">
-                <strong>Grupo:</strong> {{ $grupo->nombre }} <br>
-                <strong>Materia:</strong> {{ $materia->nombre }} <br>
-                <strong>Unidad:</strong> {{ $unidad->nombre }}
-            </p>
+{{-- ESTILOS CSS --}}
+<style>
+    /* Inputs numéricos limpios y centrados */
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+        -webkit-appearance: none; margin: 0; 
+    }
+    input[type=number] {
+        -moz-appearance: textfield;
+        text-align: center;
+        font-weight: 600;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+    }
+
+    /* COLORES DE ESTADO */
+    .input-sin-cambios { background-color: #fff; }
+    
+    /* AMARILLO: El usuario escribió algo nuevo pero NO ha guardado */
+    .input-modificado { 
+        background-color: #fff3cd !important; 
+        border-color: #ffc107 !important; 
+        box-shadow: 0 0 5px rgba(255, 193, 7, 0.5);
+    } 
+    
+    /* VERDE: Confirmado que se guardó en la Base de Datos */
+    .input-guardado { 
+        background-color: #d1e7dd !important; 
+        border-color: #198754 !important; 
+    } 
+    
+    /* ROJO: Error al intentar guardar */
+    .input-error { background-color: #f8d7da !important; border-color: #dc3545 !important; }
+
+    /* Estilos generales */
+    .table-hover tbody tr:hover { background-color: #f8f9fa; }
+    
+    /* Colores del Promedio Final */
+    .promedio-reprobado { color: #dc3545; font-weight: 800; } /* Rojo fuerte */
+    .promedio-aprobado { color: #198754; font-weight: 800; }  /* Verde fuerte */
+    
+    .acciones-header {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 20px; background: #fff; padding: 15px;
+        border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+</style>
+
+<div class="container">
+    
+    {{-- ENCABEZADO Y BOTONES --}}
+    <div class="acciones-header">
+        <div>
+            <h2 class="mb-0">Hoja de Calificación</h2>
+            <small class="text-muted">
+                {{ $grupo->nombre }} | {{ $materia->nombre }} | Unidad: {{ $unidad->nombre }}
+            </small>
         </div>
-        <div class="col-auto">
-            {{-- Botón para regresar --}}
+        <div class="d-flex gap-2">
             <a href="javascript:history.back()" class="btn btn-outline-secondary">
-                &larr; Volver
+                <i class="bi bi-arrow-left"></i> Volver
             </a>
+            
+            {{-- BOTÓN GRANDE DE GUARDAR --}}
+            <button type="button" class="btn btn-primary btn-lg px-4" id="btn-guardar-todo">
+                <i class="bi bi-save"></i> GUARDAR CAMBIOS
+            </button>
         </div>
     </div>
 
-    {{-- 2. LA TABLA DE CALIFICACIÓN --}}
-    <div class="table-responsive">
-        <table class="table table-bordered table-hover" id="tabla-calificaciones">
-            <thead class="table-light">
-                <tr>
-                    {{-- Columna Fija de Alumno --}}
-                    <th style="min-width: 200px;">Alumno</th>
-                    
-                    {{-- 3. COLUMNAS DINÁMICAS: Los instrumentos --}}
-                    @foreach ($instrumentos as $instrumento)
-                        <th class="text-center" data-porcentaje="{{ $instrumento->porcentaje }}">
-                            {{ $instrumento->nombre }}
-                            <br>
-                            <small>({{ $instrumento->porcentaje }}%)</small>
-                        </th>
-                    @endforeach
-                    
-                    {{-- Columna Fija de Promedio --}}
-                    <th class="text-center" style="min-width: 100px;">Promedio Unidad</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{-- 4. FILAS DINÁMICAS: Los alumnos --}}
-                @forelse ($alumnos as $alumno)
-                    <tr class="align-middle">
-                        {{-- Nombre del Alumno --}}
-                        <td>{{ $alumno->apellido_paterno }} {{ $alumno->apellido_materno }} {{ $alumno->nombre }}</td>
+    {{-- TABLA --}}
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered mb-0 align-middle" id="tabla-calificaciones">
+                    <thead class="table-light text-center">
+                        <tr>
+                            <th class="text-start" style="min-width: 250px;">Alumno</th>
+                            
+                            {{-- Columnas de Instrumentos (Examen, Tarea, etc.) --}}
+                            @foreach ($instrumentos as $instrumento)
+                                <th style="min-width: 100px;" data-porcentaje="{{ $instrumento->porcentaje }}">
+                                    {{ $instrumento->nombre }}
+                                    <div style="font-size: 0.8em; color: #666;">{{ $instrumento->porcentaje }}%</div>
+                                </th>
+                            @endforeach
+                            
+                            <th class="table-active" style="width: 120px;">Promedio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($alumnos as $alumno)
+                            <tr>
+                                <td class="ps-3 fw-medium">
+                                    {{ $alumno->apellido_paterno }} {{ $alumno->apellido_materno }} {{ $alumno->nombre }}
+                                </td>
 
-                        {{-- 5. CELDAS DE INPUT: El corazón de la app --}}
-                        @foreach ($instrumentos as $instrumento)
-                            @php
-                                // Buscamos la calificación existente usando la llave "alumno_id-instrumento_id"
-                                $key = $alumno->id . '-' . $instrumento->id;
-                                $calificacion = $calificaciones->get($key);
-                            @endphp
-                            <td class="text-center">
-                                <input 
-                                    type="number" 
-                                    class="form-control calificacion-input" 
-                                    style="width: 80px; margin: 0 auto;"
-                                    step="0.1" 
-                                    min="0" 
-                                    max="10" 
-                                    
-                                    {{-- Se rellena el valor si ya existe --}}
-                                    value="{{ $calificacion->calificacion_obtenida ?? '' }}" 
-                                    
-                                    {{-- Estos data-atributos son vitales para el JS --}}
-                                    data-alumno-id="{{ $alumno->id }}"
-                                    data-instrumento-id="{{ $instrumento->id }}"
-                                >
-                            </td>
-                        @endforeach
-                        
-                        {{-- Celda para el promedio (se calcula con JS) --}}
-                        <td class="text-center fw-bold fs-5 align-middle" data-promedio-id="{{ $alumno->id }}">
-                            --
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="{{ 2 + $instrumentos->count() }}" class="text-center">
-                            No hay alumnos asignados a este grupo.
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+                                {{-- Celdas de Calificación --}}
+                                @foreach ($instrumentos as $instrumento)
+                                    @php
+                                        // Obtener calificación si existe
+                                        $key = $alumno->id . '-' . $instrumento->id;
+                                        $val = $calificaciones->get($key)->calificacion_obtenida ?? '';
+                                    @endphp
+                                    <td class="text-center p-1">
+                                        <input 
+                                            type="number" 
+                                            class="form-control calificacion-input input-sin-cambios" 
+                                            value="{{ $val }}"
+                                            step="0.1" min="0" max="10"
+                                            data-alumno-id="{{ $alumno->id }}"
+                                            data-instrumento-id="{{ $instrumento->id }}"
+                                            data-original-value="{{ $val }}" 
+                                            placeholder="-"
+                                        >
+                                    </td>
+                                @endforeach
+                                
+                                {{-- Celda de Promedio --}}
+                                <td class="text-center table-active fw-bold fs-5" data-promedio-id="{{ $alumno->id }}">--</td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="100%" class="text-center p-4">No hay alumnos en este grupo.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 
-{{-- 6. TOKEN CSRF (Tu layout 'layaout.app' ya lo tiene en el <head>) --}}
+{{-- Token de seguridad obligatorio para Laravel --}}
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
 @endsection
 
 @push('scripts')
-{{-- 
-  7. EL JAVASCRIPT. 
-  Tu layout 'layaout.app' ya tiene el '@stack('scripts')', así que esto funcionará.
---}}
+{{-- Librería de Alertas (SweetAlert2) --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Busca el token en el <head> (que tu layout debe tener)
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    // RUTA IMPORTANTE: Verifica que coincida con tu web.php
     const urlGuardar = '{{ route("calificaciones.guardar.unidad") }}';
+    
+    const btnGuardarTodo = document.getElementById('btn-guardar-todo');
     const inputs = document.querySelectorAll('.calificacion-input');
 
-    // Recalcular promedios al cargar la página
+    // 1. INICIO: Calcular promedios visuales al cargar
     recalcularTodosLosPromedios();
 
+    // 2. CONFIGURACIÓN DE CADA INPUT
     inputs.forEach(input => {
-        input.addEventListener('blur', function() {
-            // Cuando el usuario sale del input...
-            const alumnoId = this.dataset.alumnoId;
-            const instrumentoId = this.dataset.instrumentoId;
-            let calificacion = this.value; // <--- MODIFICADO a 'let'
-            const fila = this.closest('tr');
-
-            // ==========================================================
-            // --- ¡NUEVA VALIDACIÓN DE ENTRADA! ---
-            // ==========================================================
-            if (calificacion !== "") {
-                let califNum = parseFloat(calificacion);
-                
-                // 1. Si es mayor a 10, se ajusta a 10
-                if (califNum > 10) {
-                    califNum = 10;
-                    this.value = califNum; // Corregir el valor en la caja
-                } 
-                // 2. Si es menor a 0, se ajusta a 0
-                else if (califNum < 0) {
-                    califNum = 0;
-                    this.value = califNum;
-                }
-                
-                calificacion = califNum.toString(); // Usar el valor corregido para guardar
+        
+        // EVENTO: Al escribir (Feedback visual inmediato)
+        input.addEventListener('input', function() {
+            let val = parseFloat(this.value);
+            
+            // Validar límites visualmente
+            if (val > 10) this.value = 10;
+            if (val < 0) this.value = 0;
+            
+            // Si cambió el valor original, poner AMARILLO
+            const original = this.dataset.originalValue;
+            if (this.value != original) {
+                this.classList.remove('input-guardado', 'input-sin-cambios');
+                this.classList.add('input-modificado');
+            } else {
+                this.classList.remove('input-modificado');
+                this.classList.add('input-sin-cambios');
             }
-            // --- FIN VALIDACIÓN ---
 
+            // Actualizar promedio en tiempo real
+            recalcularPromedioFila(this.closest('tr'));
+        });
 
-            // 1. Guardar la calificación
-            guardarCalificacion(alumnoId, instrumentoId, calificacion, this);
+        // EVENTO: Al salir de la celda (Formateo y Truncado)
+        input.addEventListener('blur', function() {
+            if (this.value !== "") {
+                // AQUÍ USAMOS LA FUNCIÓN DE TRUNCAR (CORTAR)
+                // 2 decimales. Cambia el 2 por 1 si prefieres un solo decimal.
+                this.value = truncarValor(this.value, 2); 
+            }
+        });
 
-            // 2. Recalcular el promedio de esa fila
-            recalcularPromedioFila(fila);
+        // EVENTO: Tecla Enter para saltar
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                // Opcional: Código para enfocar el siguiente input
+            }
         });
     });
 
-    /**
-     * Guarda la calificación en la base de datos vía Fetch.
-     */
-    async function guardarCalificacion(alumnoId, instrumentoId, calificacion, inputElement) {
-        
-        // Si la calificación está vacía, no guardamos, pero limpiamos el color
-        if (calificacion === "") {
-             inputElement.style.backgroundColor = '#FFFFFF'; // Blanco
-             // NOTA: Aquí podrías llamar a una ruta "delete" si quisieras borrar
-             // el registro de la BD. Por ahora, solo no lo guarda.
-             return;
-        }
+    // 3. BOTÓN "GUARDAR TODO"
+    btnGuardarTodo.addEventListener('click', async function() {
+        // Solo buscamos los inputs que están en AMARILLO (modificados)
+        const inputsModificados = document.querySelectorAll('.calificacion-input.input-modificado');
 
-        // Poner un feedback visual de "guardando"
-        inputElement.style.backgroundColor = '#fff9c4'; // Amarillo
-
-        try {
-            const response = await fetch(urlGuardar, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                body: JSON.stringify({
-                    alumno_id: alumnoId,
-                    instrumento_id: instrumentoId,
-                    calificacion: calificacion
-                })
+        if (inputsModificados.length === 0) {
+            Swal.fire({
+                icon: 'info', title: 'Sin cambios', 
+                text: 'No hay calificaciones nuevas pendientes de guardar.',
+                timer: 2000, showConfirmButton: false
             });
-
-            const data = await response.json();
-
-            // ==========================================================
-            // --- ¡VALIDACIÓN MEJORADA! ---
-            // ==========================================================
-            // Si el backend (Laravel) rechaza la nota (ej. max:10), 
-            // la respuesta no será 'ok'.
-            if (!response.ok) {
-                // Si la validación falla, data.message tendrá el error
-                throw new Error(data.message || 'Error del servidor');
-            }
-            // --- FIN VALIDACIÓN ---
-
-            if (data.success) {
-                inputElement.style.backgroundColor = '#c8e6c9'; // Verde
-            } else {
-                // Esto ya no debería pasar si !response.ok funciona, pero es buena seguridad
-                inputElement.style.backgroundColor = '#ffcdd2'; // Rojo
-                console.error('Error al guardar:', data.message);
-            }
-
-        } catch (error) {
-            inputElement.style.backgroundColor = '#ffcdd2'; // Rojo
-            console.error('Error de red o validación:', error);
+            return;
         }
+
+        // Bloquear botón para evitar doble clic
+        btnGuardarTodo.disabled = true;
+        const textoOriginal = btnGuardarTodo.innerHTML;
+        btnGuardarTodo.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Guardando...';
+
+        let errores = 0;
+
+        // Guardar en paralelo
+        const promesas = Array.from(inputsModificados).map(async (input) => {
+            try {
+                await guardarCalificacionIndividual(input);
+                
+                // Si tuvo éxito:
+                input.dataset.originalValue = input.value; // Actualizamos el "original"
+                input.classList.remove('input-modificado', 'input-error');
+                input.classList.add('input-guardado'); // VERDE
+                
+            } catch (error) {
+                errores++;
+                input.classList.add('input-error'); // ROJO
+                console.error(error);
+            }
+        });
+
+        // Esperar a que todos terminen
+        await Promise.all(promesas);
+
+        // Restaurar botón
+        btnGuardarTodo.disabled = false;
+        btnGuardarTodo.innerHTML = textoOriginal;
+
+        // Mensaje final
+        if (errores === 0) {
+            Swal.fire({
+                icon: 'success', title: '¡Guardado!',
+                text: 'Todas las calificaciones se actualizaron correctamente.',
+                timer: 1500, showConfirmButton: false
+            });
+        } else {
+            Swal.fire({
+                icon: 'warning', title: 'Atención',
+                text: `Hubo error al guardar ${errores} calificaciones. Revisa las celdas rojas.`
+            });
+        }
+    });
+
+    // 4. FUNCIÓN AUXILIAR PARA GUARDAR/BORRAR
+    async function guardarCalificacionIndividual(inputElement) {
+        let calificacion = inputElement.value;
+        
+        // Si está vacío, enviamos null (El controlador debe hacer ->delete())
+        if (calificacion === "") {
+            calificacion = null;
+        }
+
+        const response = await fetch(urlGuardar, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify({
+                alumno_id: inputElement.dataset.alumnoId,
+                instrumento_id: inputElement.dataset.instrumentoId,
+                calificacion: calificacion 
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) throw new Error(data.message || 'Error del servidor');
+
+        // Si se borró (null), quitamos el color verde y dejamos blanco
+        if (calificacion === null) {
+            inputElement.classList.remove('input-guardado');
+            inputElement.classList.add('input-sin-cambios');
+        }
+
+        return data;
     }
 
-    /**
-     * Recalcula el promedio de una fila de alumno específica.
-     */
+    // 5. FUNCIÓN ESPECIAL PARA TRUNCAR DECIMALES (NO REDONDEAR)
+    function truncarValor(valor, decimales) {
+        let num = parseFloat(valor);
+        if (isNaN(num)) return "";
+        
+        let str = num.toString();
+        // Si tiene punto decimal
+        if (str.indexOf('.') !== -1) {
+            let partes = str.split('.');
+            let decimalCortado = partes[1].substring(0, decimales);
+            // Si quedó corta (ej. 5.), opcionalmente rellenar con 0
+            if (decimalCortado.length < decimales) {
+                 decimalCortado = decimalCortado.padEnd(decimales, '0');
+            }
+            return parseFloat(partes[0] + '.' + decimalCortado).toFixed(decimales);
+        }
+        // Si es entero
+        return num.toFixed(decimales);
+    }
+
+    // 6. CÁLCULO DE PROMEDIOS (Suma Acumulativa)
     function recalcularPromedioFila(fila) {
         const inputsFila = fila.querySelectorAll('.calificacion-input');
         const celdaPromedio = fila.querySelector('[data-promedio-id]');
         const ths = document.querySelectorAll('#tabla-calificaciones thead th[data-porcentaje]');
         
-        let sumaPonderada = 0;
-        let sumaPorcentajes = 0;
-
+        let sumaAcumulada = 0;
+        
         inputsFila.forEach((input, index) => {
-            const calif = parseFloat(input.value);
+            let calif = parseFloat(input.value);
+            // Si está vacío, cuenta como 0 para el promedio acumulado
+            if (isNaN(calif)) calif = 0;
+            
             const porcentaje = parseFloat(ths[index].dataset.porcentaje);
-
-            if (!isNaN(calif) && !isNaN(porcentaje)) {
-                sumaPonderada += (calif * (porcentaje / 100));
-                sumaPorcentajes += (porcentaje / 100);
-            }
+            
+            // Fórmula: (Nota * Porcentaje) / 100
+            sumaAcumulada += (calif * porcentaje) / 100;
         });
 
-        if (sumaPorcentajes > 0) {
-            // Promedio basado en lo que se ha calificado:
-            let promedioFinal = sumaPonderada / sumaPorcentajes; // <--- MODIFICADO a 'let'
-            
-            // ==========================================================
-            // --- ¡NUEVA VALIDACIÓN DE PROMEDIO! ---
-            // ==========================================================
-            if (promedioFinal > 10) {
-                promedioFinal = 10;
-            }
-            // --- FIN VALIDACIÓN ---
+        // Tope lógico 10
+        if (sumaAcumulada > 10) sumaAcumulada = 10;
 
-            celdaPromedio.textContent = promedioFinal.toFixed(2);
+        // TRUNCAR EL PROMEDIO FINAL TAMBIÉN (Para ser consistentes con Excel)
+        // Usamos la misma lógica de truncar a 1 o 2 decimales
+        const promedioFinal = truncarValor(sumaAcumulada, 2); // 2 decimales
+        
+        celdaPromedio.textContent = promedioFinal;
+        
+        // Estilos condicionales
+        celdaPromedio.className = 'text-center fw-bold fs-5 align-middle'; 
+        if (parseFloat(promedioFinal) < 7) {  // Criterio de reprobado (ej. 6 o 7)
+            celdaPromedio.classList.add('promedio-reprobado');
         } else {
-            celdaPromedio.textContent = '--';
+            celdaPromedio.classList.add('promedio-aprobado');
         }
     }
 
-    /**
-     * Llama a recalcularPromedioFila para todas las filas al cargar la página.
-     */
     function recalcularTodosLosPromedios() {
         const filas = document.querySelectorAll('#tabla-calificaciones tbody tr');
         filas.forEach(fila => {
-            if (fila.querySelector('.calificacion-input')) {
-                recalcularPromedioFila(fila);
-            }
+            if (fila.querySelector('.calificacion-input')) recalcularPromedioFila(fila);
         });
     }
+
+    // 7. PREVENIR SALIDA ACCIDENTAL
+    window.addEventListener('beforeunload', function (e) {
+        const modificados = document.querySelectorAll('.input-modificado').length;
+        if (modificados > 0) {
+            e.preventDefault();
+            e.returnValue = ''; // Muestra alerta estándar del navegador
+        }
+    });
 });
 </script>
 @endpush

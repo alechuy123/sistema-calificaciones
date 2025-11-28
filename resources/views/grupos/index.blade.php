@@ -74,11 +74,6 @@
 
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium flex items-center space-x-3">
 
-                                        {{-- === CAMBIO 1 (BOTÓN NUEVO) === --}}
-                                        <a href="{{ route('calificaciones.selector', ['grupo_id' => $grupo->id]) }}" class="text-blue-600 hover:text-blue-900 font-semibold" title="Calificar este grupo">
-                                            Calificar
-                                        </a>
-
                                         <a href="{{ route('grupos.promover.form', $grupo->id) }}" class="text-green-600 hover:text-green-900 font-semibold" title="Promover al siguiente cuatrimestre">
                                             Promover
                                         </a>
