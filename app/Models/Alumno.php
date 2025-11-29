@@ -131,4 +131,18 @@ class Alumno extends Model
             }
         );
     }
+    public function activar()
+    {
+        $this->esta_activo = true;
+        $this->save();
+    }
+
+    /**
+     * Desactiva al alumno.
+     */
+    public function desactivar()
+    {
+        $this->esta_activo = false;
+        $this->save();
+    }
 }
