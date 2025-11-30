@@ -4,7 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str; 
+use Illuminate\Support\Str; // Importante para las funciones de Dafne
+
+// --- Imports ---
+use App\Models\Unidad;
+use App\Models\Carrera;
+use App\Models\Grupo;
 
 class Materia extends Model
 {
@@ -20,6 +25,7 @@ class Materia extends Model
         'esta_activo' => 'boolean',
     ];
 
+    // --- RELACIONES ---
 
     public function unidades()
     {
@@ -36,7 +42,7 @@ class Materia extends Model
         return $this->belongsToMany(Grupo::class, 'grupo_materia');
     }
 
-
+    // --- FUNCIONES NUEVAS DE DAFNE (Integradas) ---
 
     // prueba 1:
     public function getCodigo(): string

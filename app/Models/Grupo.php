@@ -4,6 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+// --- IMPORTACIONES LIMPIADAS ---
+// (Se eliminaron las duplicadas)
+use App\Models\Materia;
+use App\Models\Cuatrimestre;
+use App\Models\Carrera;
+use App\Models\Alumno;
 
 class Grupo extends Model
 {
@@ -87,5 +93,32 @@ class Grupo extends Model
     {
         // Un grupo tiene una (o ninguna) versión futura
         return $this->hasOne(Grupo::class, 'grupo_anterior_id');
+    }
+
+    // ==========================================================
+    // --- ¡NUEVA FUNCIÓN PARA LA PRUEBA UNITARIA! ---
+    // (Esta es la función que conservamos de tu rama HEAD)
+    // ==========================================================
+
+    /**
+     * (Lógica para Prueba Unitaria)
+     * Intenta sugerir un nombre para el siguiente cuatrimestre.
+     * Ej: "G-ISC-2A" se convierte en "G-ISC-3A"
+     */
+    public function getNombreSugeridoPromocion(): string
+    {
+        // Busca un número al final del nombre
+        $count = 0;
+        $sugerencia = preg_replace_callback('/(\d+)$/', function ($matches) {
+            // Si encuentra un número, lo incrementa
+            return $matches[1] + 1;
+        }, $this->nombre, 1, $count);
+
+        // Si no encontró un número, solo añade "-PROMO"
+        if ($count === 0) {
+            return $this->nombre . '-PROMO';
+        }
+
+        return $sugerencia;
     }
 }

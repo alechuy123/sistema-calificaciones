@@ -10,7 +10,7 @@ use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\DashboardController;
 
 // --- Imports Combinados ---
-use App\Http\Controllers\CriterioController;
+// Se eliminó CriterioController ya que no se usa
 use App\Http\Controllers\CalificacionController;
 use App\Http\Controllers\AuthController;
 // Import de Dafne añadido:
@@ -24,7 +24,6 @@ Route::get('/', function () {
 
 
 // --- Rutas de Autenticación de Heri (para invitados) ---
-// --- CORRECCIÓN: Se quitó el punto extra de "Route.::" ---
 Route::middleware('guest')->group(function () {
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
@@ -44,7 +43,6 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
 
     // Ruta de dashboard (de Heri/Alejandro)
-    // CÓDIGO NUEVO:
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Ruta de cierre de sesión (de Heri)
@@ -52,7 +50,7 @@ Route::middleware('auth')->group(function () {
 
 
     // --- TUS RUTAS DE GESTIÓN (Ahora protegidas) ---
-    Route::resource('carreras', CarreraController::class);
+    Route::resource('carreras', CarreraController::class); 
     Route::resource('ciclos', CicloEscolarController::class);
     Route::resource('alumnos', AlumnoController::class);
     Route::resource('materias', MateriaController::class);
@@ -71,13 +69,29 @@ Route::middleware('auth')->group(function () {
     Route::post('/grupos/{grupo}/promover', [GrupoController::class, 'promover'])->name('grupos.promover');
 
 
-    // Rutas para Criterios (de Alejandro)
-    Route::get('criterios/create/{materia?}', [CriterioController::class, 'create'])->name('criterios.create');
-    Route::resource('criterios', CriterioController::class)->except(['create', 'show']);
+    // --- INICIO: Rutas de Calificación (Tu nueva idea + GERA) ---
+    
+    // 1. Ruta para MOSTRAR el "Selector" de 3 dropdowns (Flujo original)
+    Route::get('/calificar/seleccionar', [CalificacionController::class, 'showSelector'])
+         ->name('calificaciones.selector');
+         
+    // 1.B. NUEVA RUTA: Selector iniciando desde MATERIA (Flujo nuevo)
+    // Esta es la ruta que usa el botón "Calificar" en la lista de materias
+    // URL: /calificaciones/por-materia/5
+    Route::get('/calificaciones/por-materia/{materia}', [CalificacionController::class, 'showSelectorPorMateria'])
+         ->name('calificaciones.por_materia'); // <<< RUTA NUEVA AGREGADA AQUÍ >>>
+    
+    // 2. Ruta para MOSTRAR la hoja de calificación (la tabla HTML)
+    // URL: /grupos/1/materias/5/unidades/8/calificar
+    Route::get('/grupos/{grupo}/materias/{materia}/unidades/{unidad}/calificar', [CalificacionController::class, 'showHojaDeCalificacion'])
+         ->name('calificaciones.hoja');
+    
+    // 3. Ruta para GUARDAR (vía JS/Fetch) una calificación de la hoja
+    Route::post('/calificaciones/guardar-unidad', [CalificacionController::class, 'storeOrUpdate'])
+         ->name('calificaciones.guardar.unidad');
+    
+    // --- FIN: Rutas de Calificación ---
 
-    // Rutas para Calificaciones (de Alejandro)
-    Route::get('/calificar/{grupo}/{materia}', [CalificacionController::class, 'create'])->name('calificaciones.create');
-    Route::post('/calificar', [CalificacionController::class, 'store'])->name('calificaciones.store');
 
     // --- NUEVAS RUTAS DE DAFNE (Añadidas y protegidas) ---
     Route::get('/materias/{materia}/configurar-evaluacion', [ConfiguracionEvaluacionController::class, 'show'])->name('evaluacion.show');
@@ -91,12 +105,17 @@ Route::middleware('auth')->group(function () {
 
     // API para JavaScript (Formulario de Grupos)
     Route::get('/api/carreras/{carrera}/materias', [GrupoController::class, 'getMateriasPorCarrera'])
-         ->name('api.carreras.materias');
+          ->name('api.carreras.materias');
 
-    // --- ¡NUEVA RUTA AÑADIDA! ---
     // API para JavaScript (Formulario de Alumnos)
     Route::get('/api/carreras/{carrera}/grupos', [AlumnoController::class, 'getGruposPorCarrera'])
-         ->name('api.carreras.grupos');
+          ->name('api.carreras.grupos');
+
+    // API para el "Selector" de Calificaciones
+    Route::get('/api/grupos/{grupo}/materias', [CalificacionController::class, 'getMateriasPorGrupo'])
+         ->name('api.grupos.materias');
+    
+    Route::get('/api/materias/{materia}/unidades', [CalificacionController::class, 'getUnidadesPorMateria'])
+         ->name('api.materias.unidades');
 
 });
-
