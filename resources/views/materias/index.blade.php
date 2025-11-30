@@ -81,20 +81,29 @@
                                 </td>
                                 <td>
                                     <div class="d-flex gap-1 justify-content-end">
-                                        {{-- BOTÓN INFO PÚBLICA (OJO) --}}
+                                        
+                                        {{-- 1. BOTÓN CALIFICAR (NUEVO) --}}
+                                        {{-- Redirige al selector general, pre-seleccionando la materia si es posible --}}
+                                        <a href="{{ route('calificaciones.selector', ['materia_id' => $materia->id]) }}" class="btn btn-sm btn-success" title="Calificar esta materia">
+                                            <i class="fas fa-check-circle"></i> Calificar
+                                        </a>
+
+                                        {{-- 2. BOTÓN INFO PÚBLICA --}}
                                         <a href="{{ route('materia.publica.info', $materia->id) }}" class="btn btn-sm btn-info text-white" title="Ver Info Pública">
                                             <i class="fas fa-eye"></i> Ver
                                         </a>
 
-                                        {{-- BOTÓN CONFIGURAR EVALUACIÓN --}}
+                                        {{-- 3. BOTÓN CONFIGURAR EVALUACIÓN --}}
                                         <a href="{{ route('evaluacion.show', $materia->id) }}" class="btn btn-sm btn-warning text-dark" title="Configurar Evaluación">
                                             <i class="fas fa-cogs"></i> Eval
                                         </a>
 
+                                        {{-- 4. EDITAR --}}
                                         <a href="{{ route('materias.edit', $materia->id) }}" class="btn btn-sm btn-primary" title="Editar">
                                             <i class="fas fa-edit"></i> Editar
                                         </a>
 
+                                        {{-- 5. BAJA / ALTA --}}
                                         @if($materia->esta_activo)
                                             <form action="{{ route('materias.destroy', $materia->id) }}" method="POST" class="d-inline-block">
                                                 @csrf
