@@ -81,6 +81,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/calificaciones/por-materia/{materia}', [CalificacionController::class, 'showSelectorPorMateria'])
          ->name('calificaciones.por_materia'); // <<< RUTA NUEVA AGREGADA AQUÍ >>>
     
+         
     // 2. Ruta para MOSTRAR la hoja de calificación (la tabla HTML)
     // URL: /grupos/1/materias/5/unidades/8/calificar
     Route::get('/grupos/{grupo}/materias/{materia}/unidades/{unidad}/calificar', [CalificacionController::class, 'showHojaDeCalificacion'])

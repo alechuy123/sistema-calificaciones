@@ -84,7 +84,7 @@
                                         
                                         {{-- 1. BOTÓN CALIFICAR (NUEVO) --}}
                                         {{-- Redirige al selector general, pre-seleccionando la materia si es posible --}}
-                                        <a href="{{ route('calificaciones.selector', ['materia_id' => $materia->id]) }}" class="btn btn-sm btn-success" title="Calificar esta materia">
+                                        <a href="{{ route('calificaciones.por_materia', $materia->id) }}" class="btn btn-sm btn-success" title="Calificar esta materia">
                                             <i class="fas fa-check-circle"></i> Calificar
                                         </a>
 
