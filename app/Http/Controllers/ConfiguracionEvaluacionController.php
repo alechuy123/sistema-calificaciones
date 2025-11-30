@@ -24,8 +24,8 @@ class ConfiguracionEvaluacionController extends Controller
         // 1. VALIDACIÓN (Esto ya estaba correcto)
         $request->validate([
             'unidades' => 'required|array',
-            'unidades.*.fecha_inicio' => 'required|date',
-            'unidades.*.fecha_fin' => 'required|date|after_or_equal:unidades.*.fecha_inicio',
+            'unidades.*.fecha_inicio' => 'nullable|date',
+            'unidades.*.fecha_fin' => 'nullable|date|after_or_equal:unidades.*.fecha_inicio',
             'unidades.*.instrumentos' => 'sometimes|required|array|min:1',
             'unidades.*.instrumentos.*.nombre' => 'required_with:unidades.*.instrumentos|string|max:255',
             'unidades.*.instrumentos.*.porcentaje' => 'required_with:unidades.*.instrumentos|integer|min:1|max:100',
