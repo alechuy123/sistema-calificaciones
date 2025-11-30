@@ -13,26 +13,11 @@ class MateriaController extends Controller
     /**
      * Muestra la lista de materias (precargando carreras y unidades)
      */
-    public function index(Request $request)
-{
-    // Iniciamos la consulta base
-    $query = Materia::query();
-
-    // Aplicamos el filtro según lo que llegue en la URL
-    $filtro = $request->get('filtro');
-
-    if ($filtro == 'activas') {
-        $query->where('esta_activo', true);
-    } elseif ($filtro == 'desactivadas') {
-        $query->where('esta_activo', false);
+    public function index()
+    {
+        $materias = Materia::with('carreras', 'unidades')->get();
+        return view('materias.index', compact('materias'));
     }
-    // Si es "todas" o no hay filtro, no entra en los if y trae todo.
-
-    // Obtenemos los resultados (puedes usar paginate o get)
-    $materias = $query->get(); 
-
-    return view('materias.index', compact('materias'));
-}
 
     /**
      * Muestra el formulario para crear (fusionado).
