@@ -149,7 +149,6 @@
 
 </style>
 
-{{-- SECCIÓN HERO (Encabezado Visual) --}}
 <div class="course-hero">
     <div class="container">
         <div class="d-flex justify-content-between align-items-start mb-4">
@@ -168,7 +167,6 @@
 
 <div class="container mt-4">
     
-    {{-- TARJETA DE OBJETIVO GENERAL (Superpuesta al Hero) --}}
     <div class="modern-card fade-in-up" style="position: relative; z-index: 10;">
         <div class="card-body p-5 p-lg-6">
             <h5 class="text-uppercase text-secondary fw-bold fs-6 mb-3">
