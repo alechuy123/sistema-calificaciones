@@ -6,7 +6,7 @@
         <i class="fas fa-arrow-left"></i> Volver al Listado
     </a>
 
-    <h2 class="mb-3"><i class="fas fa-tasks"></i> Configuración de Evaluación para: {{ $materia->nombre }}</h2>
+    <h2 class="mb-3"><i class="fas fa-tasks"></i> Herramientas de Evaluación para: {{ $materia->nombre }}</h2>
 
     @if ($errors->any())
         <div class="alert alert-danger">
@@ -49,7 +49,7 @@
                             name="unidades[{{ $unidad->id }}][fecha_inicio]"
                             class="form-control"
                             value="{{ old('unidades.'.$unidad->id.'.fecha_inicio', $unidad->fecha_inicio?->format('Y-m-d')) }}"
-                            required>
+                            >
                     </div>
                     <div class="col-md-6">
                         <label for="fecha_fin_{{ $unidad->id }}" class="form-label">Fecha de Fin:</label>
@@ -58,7 +58,7 @@
                             name="unidades[{{ $unidad->id }}][fecha_fin]"
                             class="form-control"
                             value="{{ old('unidades.'.$unidad->id.'.fecha_fin', $unidad->fecha_fin?->format('Y-m-d')) }}"
-                            required>
+                            >
                     </div>
                 </div>
 
@@ -108,7 +108,6 @@
     </form>
 </div>
 
-{{-- El Script JS es idéntico, no necesita cambios --}}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         let totalEvaluacionesExistentes = {{ $materia->unidades->pluck('instrumentos')->flatten()->count() }};
