@@ -7,8 +7,8 @@
     </a>
 
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="mb-0">Materias</h1>
-        
+        <h1 class="mb-0">Gestión de Materias</h1>
+
         <div class="d-flex gap-2 align-items-center">
             <form action="{{ route('materias.index') }}" method="GET">
                 <select name="filtro" class="form-select" onchange="this.form.submit()" style="width: 150px; cursor: pointer;">
@@ -24,6 +24,7 @@
         </div>
     </div>
 
+    {{-- Muestra el mensaje de éxito --}}
     @if ($message = Session::get('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             {{ $message }}
@@ -34,7 +35,7 @@
     @if($materias->isEmpty())
         <div class="alert alert-info">
             @if(request('filtro') && request('filtro') != 'todas')
-                No se encontraron materias con el filtro: <strong>{{ request('filtro') }}</strong>. 
+                No se encontraron materias con el filtro: <strong>{{ request('filtro') }}</strong>.
                 <a href="{{ route('materias.index') }}">Ver todas</a>.
             @else
                 No hay materias registradas. <a href="{{ route('materias.create') }}">¡Registra la primera!</a>
@@ -51,7 +52,6 @@
                             <th>Estado</th>
                             <th>Unidades</th>
                             <th>Asignada a Carreras</th>
-                            {{-- AUMENTÉ EL ANCHO A 420px PARA QUE QUEPAN LOS 5 BOTONES CON TEXTO --}}
                             <th style="width: 420px;">Acciones</th>
                         </tr>
                     </thead>
@@ -60,16 +60,21 @@
                             <tr>
                                 {{-- <td>{{ $materia->id }}</td> --}}
                                 <td class="fw-bold">{{ $materia->nombre }}</td>
+
+                                {{-- Estado --}}
                                 <td>
-                                    @if($materia->esta_activo)
-                                        <span class="badge bg-success">Activa</span>
+                                    @if ($materia->esta_activo)
+                                        <span class="badge bg-success">✅ Activa</span>
                                     @else
-                                        <span class="badge bg-secondary">Inactiva</span>
+                                        <span class="badge bg-danger">❌ Desactivada</span>
                                     @endif
                                 </td>
+
                                 <td>
                                     <span class="badge bg-info text-dark">{{ $materia->unidades->count() }} Unidades</span>
                                 </td>
+
+                                {{-- Carreras --}}
                                 <td>
                                     @if($materia->carreras->isEmpty())
                                         <span class="text-muted fst-italic small">Sin asignar</span>
@@ -79,21 +84,23 @@
                                         @endforeach
                                     @endif
                                 </td>
+
+                                {{-- ACCIONES --}}
                                 <td>
                                     <div class="d-flex gap-1 justify-content-end">
-                                        
-                                        {{-- 1. BOTÓN CALIFICAR (NUEVO) --}}
-                                        {{-- Redirige al selector general, pre-seleccionando la materia si es posible --}}
+
+                                        {{-- 1. CALIFICAR (CORREGIDO) --}}
+                                        {{-- Se cambió route('calificaciones.selector', ...) por route('calificaciones.por_materia', ...) --}}
                                         <a href="{{ route('calificaciones.por_materia', $materia->id) }}" class="btn btn-sm btn-success" title="Calificar esta materia">
                                             <i class="fas fa-check-circle"></i> Calificar
                                         </a>
 
-                                        {{-- 2. BOTÓN INFO PÚBLICA --}}
+                                        {{-- 2. VER INFO --}}
                                         <a href="{{ route('materia.publica.info', $materia->id) }}" class="btn btn-sm btn-info text-white" title="Ver Info Pública">
                                             <i class="fas fa-eye"></i> Ver
                                         </a>
 
-                                        {{-- 3. BOTÓN CONFIGURAR EVALUACIÓN --}}
+                                        {{-- 3. EVALUACIÓN --}}
                                         <a href="{{ route('evaluacion.show', $materia->id) }}" class="btn btn-sm btn-warning text-dark" title="Configurar Evaluación">
                                             <i class="fas fa-cogs"></i> Eval
                                         </a>
@@ -105,21 +112,23 @@
 
                                         {{-- 5. BAJA / ALTA --}}
                                         @if($materia->esta_activo)
-                                            <form action="{{ route('materias.destroy', $materia->id) }}" method="POST" class="d-inline-block">
+                                            {{-- Formulario DESACTIVAR --}}
+                                            <form action="{{ route('materias.destroy', $materia->id) }}" method="POST" class="d-inline-block form-desactivar">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Estás seguro de desactivar esta materia?')" title="Desactivar">
-                                                    <i class="fas fa-ban"></i> Baja
+                                                <button type="submit" class="btn btn-sm btn-danger" title="Desactivar">
+                                                    <i class="fas fa-trash-alt"></i> Baja
                                                 </button>
                                             </form>
                                         @else
-                                            <form action="{{ route('materias.update', $materia->id) }}" method="POST" class="d-inline-block">
+                                            {{-- Formulario ACTIVAR --}}
+                                            <form action="{{ route('materias.update', $materia->id) }}" method="POST" class="d-inline-block form-activar">
                                                 @csrf
                                                 @method('PUT')
                                                 <input type="hidden" name="nombre" value="{{ $materia->nombre }}">
                                                 <input type="hidden" name="objetivo" value="{{ $materia->objetivo }}">
                                                 <input type="hidden" name="esta_activo" value="1">
-                                                <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('¿Reactivar materia?')" title="Reactivar">
+                                                <button type="submit" class="btn btn-sm btn-success" title="Reactivar">
                                                     <i class="fas fa-check"></i> Alta
                                                 </button>
                                             </form>
@@ -134,4 +143,58 @@
         </div>
     @endif
 </div>
+
+{{-- SweetAlert2 CDN --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        // 1. Lógica para DESACTIVAR (Rojo)
+        const formsDesactivar = document.querySelectorAll('.form-desactivar');
+        formsDesactivar.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault(); // Detiene el envío automático
+
+                Swal.fire({
+                    title: '¿Estás seguro?',
+                    text: "Esta materia se desactivará y no será visible para los alumnos.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33', // Rojo
+                    cancelButtonColor: '#3085d6', // Azul
+                    confirmButtonText: 'Sí, desactivar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.submit(); // Envía el formulario real si se confirma
+                    }
+                });
+            });
+        });
+
+        // 2. Lógica para ACTIVAR (Verde)
+        const formsActivar = document.querySelectorAll('.form-activar');
+        formsActivar.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault(); // Detiene el envío automático
+
+                Swal.fire({
+                    title: '¿Reactivar Materia?',
+                    text: "La materia volverá a estar activa en el sistema.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745', // Verde
+                    cancelButtonColor: '#6c757d', // Gris
+                    confirmButtonText: 'Sí, activar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.submit(); // Envía el formulario real si se confirma
+                    }
+                });
+            });
+        });
+    });
+</script>
 @endsection

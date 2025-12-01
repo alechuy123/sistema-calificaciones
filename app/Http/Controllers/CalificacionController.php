@@ -18,17 +18,18 @@ class CalificacionController extends Controller
     /**
      * Muestra la página del selector inicial.
      */
-    public function showSelector()
-    {
-        $grupos = Grupo::with('carrera')
-                    ->where('esta_activo', 1) 
-                    ->orderBy('nombre')
-                    ->get();
-                    
-        return view('calificaciones.selector', [
-            'grupos' => $grupos
-        ]);
+    public function showSelector(Request $request)
+{
+    $materia = null;
+
+    // Si la URL trae ?materia_id=1, buscamos la materia
+    if ($request->has('materia_id')) {
+        $materia = Materia::find($request->query('materia_id'));
     }
+
+    // Pasamos la variable $materia a la vista (puede ser null si no se seleccionó ninguna)
+    return view('calificaciones.selector', compact('materia'));
+}
 
     /**
      * API: Devuelve las materias de un grupo específico.
@@ -44,7 +45,7 @@ class CalificacionController extends Controller
      */
     public function getUnidadesPorMateria(Materia $materia)
     {
-        $unidades = $materia->unidades()->orderBy('nombre')->get(); 
+        $unidades = $materia->unidades()->orderBy('nombre')->get();
         return response()->json($unidades);
     }
 
@@ -85,7 +86,7 @@ class CalificacionController extends Controller
         $alumnos = $grupo->alumnos()->orderBy('apellido_paterno')->get();
 
         // 2. Cargar los instrumentos de la unidad
-        $instrumentos = $unidad->instrumentos()->orderBy('id')->get(); 
+        $instrumentos = $unidad->instrumentos()->orderBy('id')->get();
 
         // 3. Cargar las calificaciones QUE YA EXISTEN
         $calificacionesExistentes = Calificacion::whereIn('instrumento_id', $instrumentos->pluck('id'))
@@ -115,7 +116,7 @@ class CalificacionController extends Controller
         $datosValidados = $request->validate([
             'alumno_id' => 'required|integer|exists:alumnos,id',
             'instrumento_id' => 'required|integer|exists:instrumentos,id',
-            'calificacion' => 'nullable|numeric|min:0|max:10' 
+            'calificacion' => 'nullable|numeric|min:0|max:10'
         ]);
 
         $alumnoId = $datosValidados['alumno_id'];
@@ -130,7 +131,7 @@ class CalificacionController extends Controller
                             ->delete();
 
                 return response()->json([
-                    'success' => true, 
+                    'success' => true,
                     'message' => 'Calificación eliminada correctamente.'
                 ]);
             }
@@ -147,13 +148,13 @@ class CalificacionController extends Controller
             );
 
             return response()->json([
-                'success' => true, 
+                'success' => true,
                 'message' => 'Calificación guardada.'
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
-                'success' => false, 
+                'success' => false,
                 'message' => 'Error al guardar: ' . $e->getMessage()
             ], 500);
         }

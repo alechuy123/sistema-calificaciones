@@ -24,7 +24,7 @@
         color: white;
         position: relative;
         /* Aseguramos que no haya flexbox raro alineando cosas invisibles */
-        display: block; 
+        display: block;
     }
 
     /* ESTO BORRA EL CUADRO FANTASMA SI O SI */
@@ -78,7 +78,7 @@
         border-color: #0d6efd;
         box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
     }
-    
+
     .form-control-lg-custom:disabled {
         background-color: #f8f9fa;
         cursor: not-allowed;
@@ -95,14 +95,14 @@
         letter-spacing: 0.5px;
         transition: transform 0.2s, box-shadow 0.2s;
     }
-    
+
     .btn-submit-custom:hover:not(.disabled) {
         background-color: #0b5ed7;
         transform: translateY(-2px);
         box-shadow: 0 10px 20px rgba(13, 110, 253, 0.2);
         color: white;
     }
-    
+
     .btn-submit-custom.disabled {
         background-color: #e9ecef;
         color: #adb5bd;
@@ -112,12 +112,12 @@
 
 <div class="container-fluid bg-soft-main min-vh-100 d-flex flex-column">
     <div class="container py-5">
-        
+
         {{-- BOTÓN VOLVER CORREGIDO --}}
         <div class="row justify-content-center mb-4">
             <div class="col-lg-8">
                 <a href="{{ route('materias.index') }}" class="btn-back-pill">
-                    <i class="fas fa-arrow-left"></i> 
+                    <i class="fas fa-arrow-left"></i>
                     <span>Volver al Listado</span>
                 </a>
             </div>
@@ -126,7 +126,7 @@
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 <div class="card card-dashboard">
-                    
+
                     {{-- HEADER LIMPIO --}}
                     {{-- Solo hay un div dentro. Si había otro antes, el CSS de arriba lo ocultará --}}
                     <div class="header-gradient">
@@ -134,14 +134,17 @@
                             <h6 class="text-white-50 text-uppercase mb-1" style="font-size: 0.75rem; letter-spacing: 1px;">
                                 Configuración de Calificación
                             </h6>
-                            <h2 class="mb-0 fw-bold">{{ $materia->nombre }}</h2>
+                           {{-- Si existe materia, muestra el nombre. Si no, muestra un texto genérico --}}
+<h2 class="mb-0 fw-bold">
+    {{ $materia ? $materia->nombre : 'Selección General' }}
+</h2>
                         </div>
                     </div>
 
                     <div class="card-body p-4 p-md-5 bg-white">
-                        
+
                         <div class="row g-4">
-                            
+
                             {{-- SELECCIÓN DE GRUPO --}}
                             <div class="col-md-6">
                                 <label for="select-grupo" class="custom-label">
@@ -151,7 +154,7 @@
                                     <option value="">Seleccionar...</option>
                                     @forelse ($grupos as $grupo)
                                         <option value="{{ $grupo->id }}">
-                                            {{ $grupo->nombre }} 
+                                            {{ $grupo->nombre }}
                                             @if(isset($grupo->carrera))
                                                 ({{ $grupo->carrera->nombre }})
                                             @endif
